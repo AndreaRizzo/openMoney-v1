@@ -39,7 +39,7 @@ export default function GlassTabBar({ state, descriptors, navigation }: BottomTa
               >
                 <MaterialCommunityIcons
                   name={icon}
-                  size={22}
+                  size={isFocused ? 24 : 22}
                   color={isFocused ? theme.colors.primary : theme.colors.onSurface}
                 />
                 <Text
@@ -86,6 +86,11 @@ const styles = StyleSheet.create({
     minWidth: 56,
   },
   itemActive: {
-    backgroundColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(255,255,255,0.14)",
+    shadowColor: "#5C9DFF",
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
   },
 });

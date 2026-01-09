@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Platform, RefreshControl, ScrollView } from "react-native";
-import { Button, Card, List, SegmentedButtons, Switch, Text, TextInput } from "react-native-paper";
-import GlassCard from "@/ui/components/GlassCard";
+import { Platform, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { Button, List, SegmentedButtons, Switch, Text, TextInput } from "react-native-paper";
 import { useRoute } from "@react-navigation/native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { listIncomeEntries, createIncomeEntry, updateIncomeEntry, deleteIncomeEntry } from "@/repositories/incomeEntriesRepo";
@@ -9,6 +8,9 @@ import { listExpenseEntries, createExpenseEntry, updateExpenseEntry, deleteExpen
 import { listExpenseCategories, createExpenseCategory, updateExpenseCategory, deleteExpenseCategory, setExpenseCategoryActive } from "@/repositories/expenseCategoriesRepo";
 import type { ExpenseCategory, ExpenseEntry, IncomeEntry, RecurrenceFrequency } from "@/repositories/types";
 import { isIsoDate, todayIso } from "@/utils/dates";
+import PremiumCard from "@/ui/dashboard/components/PremiumCard";
+import SectionHeader from "@/ui/dashboard/components/SectionHeader";
+import { useDashboardTheme } from "@/ui/dashboard/theme";
 
 type Mode = "income" | "expense";
 
@@ -37,6 +39,7 @@ const emptyForm: FormState = {
 };
 
 export default function EntriesScreen(): JSX.Element {
+  const { tokens } = useDashboardTheme();
   const route = useRoute();
   const routeMode = (route.params as { mode?: Mode } | undefined)?.mode;
   const [mode, setMode] = useState<Mode>(routeMode ?? "income");
@@ -208,15 +211,15 @@ export default function EntriesScreen(): JSX.Element {
   const datePickerValue = form.startDate && isIsoDate(form.startDate) ? new Date(form.startDate) : new Date();
 
   return (
-    <ScrollView
-      contentContainerStyle={{ padding: 16, gap: 16 }}
-      alwaysBounceVertical
-      bounces
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
-      <GlassCard>
-        <Card.Title title="Entrate / Uscite" />
-        <Card.Content style={{ gap: 8 }}>
+    <View style={[styles.screen, { backgroundColor: tokens.colors.bg }]}>
+      <ScrollView
+        contentContainerStyle={[styles.container, { gap: tokens.spacing.md }]}
+        alwaysBounceVertical
+        bounces
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tokens.colors.accent} />}
+      >
+        <PremiumCard>
+          <SectionHeader title="Entrate / Uscite" />
           <SegmentedButtons
             value={mode}
             onValueChange={(value) => setMode(value as Mode)}
@@ -224,137 +227,231 @@ export default function EntriesScreen(): JSX.Element {
               { value: "income", label: "Entrate" },
               { value: "expense", label: "Uscite" },
             ]}
+            style={{ backgroundColor: tokens.colors.surface2 }}
           />
-        </Card.Content>
-      </GlassCard>
+        </PremiumCard>
 
-      <GlassCard>
-        <Card.Title title="Aggiungi nuova" />
-        <Card.Content style={{ gap: 8 }}>
-          <TextInput label="Nome" value={form.name} onChangeText={(text) => setForm((prev) => ({ ...prev, name: text }))} />
-          <TextInput label="Importo" keyboardType="decimal-pad" value={form.amount} onChangeText={(text) => setForm((prev) => ({ ...prev, amount: text }))} />
-          <TextInput
-            label="Data"
-            value={form.startDate}
-            editable={false}
-            onPressIn={() => setShowDatePicker(true)}
-          />
-          {showDatePicker && (
-            <DateTimePicker
-              value={datePickerValue}
-              mode="date"
-              display={Platform.OS === "ios" ? "spinner" : "default"}
-              onChange={(_, selected) => {
-                if (selected) {
-                  setForm((prev) => ({ ...prev, startDate: toIsoDate(selected) }));
-                }
-                setShowDatePicker(false);
-              }}
-            />
-          )}
-          {mode === "expense" && (
-            <GlassCard>
-              <Card.Title title="Categoria spesa" />
-              <Card.Content style={{ gap: 8 }}>
-                {activeCategories.length === 0 && <Text>Nessuna categoria attiva. Aggiungine una qui sotto.</Text>}
-                {activeCategories.map((cat) => (
-                  <Button
-                    key={cat.id}
-                    mode={form.categoryId === String(cat.id) ? "contained" : "outlined"}
-                    onPress={() => setForm((prev) => ({ ...prev, categoryId: String(cat.id) }))}
-                  >
-                    {cat.name}
-                  </Button>
-                ))}
-              </Card.Content>
-            </GlassCard>
-          )}
-          <Card.Content style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Switch value={form.recurring} onValueChange={(value) => setForm((prev) => ({ ...prev, recurring: value }))} />
-            <Text>Ricorrente</Text>
-          </Card.Content>
-          {form.recurring && (
-            <>
-              <SegmentedButtons
-                value={form.frequency}
-                onValueChange={(value) => setForm((prev) => ({ ...prev, frequency: value as RecurrenceFrequency }))}
-                buttons={[
-                  { value: "WEEKLY", label: "Weekly" },
-                  { value: "MONTHLY", label: "Monthly" },
-                  { value: "YEARLY", label: "Yearly" },
-                ]}
-              />
-              <TextInput label="Intervallo" keyboardType="numeric" value={form.interval} onChangeText={(text) => setForm((prev) => ({ ...prev, interval: text }))} />
-            </>
-          )}
-          {error && <Text style={{ color: "crimson" }}>{error}</Text>}
-        </Card.Content>
-        <Card.Actions>
-          <Button onPress={saveEntry}>Salva</Button>
-          <Button onPress={() => setForm(emptyForm)}>Reset</Button>
-          {form.id && <Button onPress={removeEntry}>Elimina</Button>}
-        </Card.Actions>
-      </GlassCard>
-
-      {mode === "expense" && (
-        <GlassCard>
-          <Card.Title title="Categorie spesa" />
-          <Card.Content style={{ gap: 8 }}>
+        <PremiumCard>
+          <SectionHeader title="Aggiungi nuova" />
+          <View style={styles.form}>
             <TextInput
-              label="Nuova categoria"
-              value={newCategory}
-              onChangeText={setNewCategory}
+              label="Nome"
+              value={form.name}
+              mode="outlined"
+              outlineColor={tokens.colors.border}
+              activeOutlineColor={tokens.colors.accent}
+              textColor={tokens.colors.text}
+              style={{ backgroundColor: tokens.colors.surface2 }}
+              onChangeText={(text) => setForm((prev) => ({ ...prev, name: text }))}
             />
-            <Button onPress={addCategory}>Aggiungi</Button>
-            {categories.map((cat) => (
-              <List.Accordion
-                key={cat.id}
-                title={categoryEdits[cat.id] ?? cat.name}
-                description={cat.active === 1 ? "Attiva" : "Disattiva"}
-                left={(props) => <List.Icon {...props} icon="tag" />}
-                style={{ marginTop: 8 }}
-              >
-                <Card.Content style={{ gap: 8 }}>
-                  <TextInput
-                    label="Nome categoria"
-                    value={categoryEdits[cat.id] ?? cat.name}
-                    onChangeText={(value) =>
-                      setCategoryEdits((prev) => ({
-                        ...prev,
-                        [cat.id]: value,
-                      }))
-                    }
-                  />
-                  <Card.Actions>
-                    <Button onPress={() => saveCategory(cat.id)}>Salva</Button>
+            <TextInput
+              label="Importo"
+              keyboardType="decimal-pad"
+              value={form.amount}
+              mode="outlined"
+              outlineColor={tokens.colors.border}
+              activeOutlineColor={tokens.colors.accent}
+              textColor={tokens.colors.text}
+              style={{ backgroundColor: tokens.colors.surface2 }}
+              onChangeText={(text) => setForm((prev) => ({ ...prev, amount: text }))}
+            />
+            <TextInput
+              label="Data"
+              value={form.startDate}
+              editable={false}
+              mode="outlined"
+              outlineColor={tokens.colors.border}
+              activeOutlineColor={tokens.colors.accent}
+              textColor={tokens.colors.text}
+              style={{ backgroundColor: tokens.colors.surface2 }}
+              onPressIn={() => setShowDatePicker(true)}
+            />
+            {showDatePicker && (
+              <DateTimePicker
+                value={datePickerValue}
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={(_, selected) => {
+                  if (selected) {
+                    setForm((prev) => ({ ...prev, startDate: toIsoDate(selected) }));
+                  }
+                  setShowDatePicker(false);
+                }}
+              />
+            )}
+            {mode === "expense" && (
+              <PremiumCard style={{ backgroundColor: tokens.colors.surface2 }}>
+                <SectionHeader title="Categoria spesa" />
+                <View style={styles.list}>
+                  {activeCategories.length === 0 && (
+                    <Text style={{ color: tokens.colors.muted }}>Nessuna categoria attiva. Aggiungine una qui sotto.</Text>
+                  )}
+                  {activeCategories.map((cat) => (
                     <Button
-                      onPress={async () => {
-                        await setExpenseCategoryActive(cat.id, cat.active === 1 ? 0 : 1);
-                        await load();
-                      }}
+                      key={cat.id}
+                      mode={form.categoryId === String(cat.id) ? "contained" : "outlined"}
+                      buttonColor={form.categoryId === String(cat.id) ? tokens.colors.accent : undefined}
+                      textColor={form.categoryId === String(cat.id) ? tokens.colors.text : tokens.colors.muted}
+                      onPress={() => setForm((prev) => ({ ...prev, categoryId: String(cat.id) }))}
                     >
-                      {cat.active === 1 ? "Disattiva" : "Attiva"}
+                      {cat.name}
                     </Button>
-                    <Button onPress={() => removeCategory(cat.id)}>Elimina</Button>
-                  </Card.Actions>
-                </Card.Content>
-              </List.Accordion>
-            ))}
-          </Card.Content>
-        </GlassCard>
-      )}
-
-      <GlassCard>
-        <Card.Title title="Lista" />
-        <Card.Content>
-          {entries.length === 0 && <Text>Nessuna voce.</Text>}
-          {entries.map((entry) => (
-            <Button key={`${mode}-${entry.id}`} onPress={() => applyEntryToForm(entry, mode)}>
-              {entry.start_date} • {entry.name} • {entry.amount.toFixed(2)}
+                  ))}
+                </View>
+              </PremiumCard>
+            )}
+            <View style={styles.row}>
+              <Switch value={form.recurring} onValueChange={(value) => setForm((prev) => ({ ...prev, recurring: value }))} />
+              <Text style={{ color: tokens.colors.text }}>Ricorrente</Text>
+            </View>
+            {form.recurring && (
+              <>
+                <SegmentedButtons
+                  value={form.frequency}
+                  onValueChange={(value) => setForm((prev) => ({ ...prev, frequency: value as RecurrenceFrequency }))}
+                  buttons={[
+                    { value: "WEEKLY", label: "Weekly" },
+                    { value: "MONTHLY", label: "Monthly" },
+                    { value: "YEARLY", label: "Yearly" },
+                  ]}
+                  style={{ backgroundColor: tokens.colors.surface2 }}
+                />
+                <TextInput
+                  label="Intervallo"
+                  keyboardType="numeric"
+                  value={form.interval}
+                  mode="outlined"
+                  outlineColor={tokens.colors.border}
+                  activeOutlineColor={tokens.colors.accent}
+                  textColor={tokens.colors.text}
+                  style={{ backgroundColor: tokens.colors.surface2 }}
+                  onChangeText={(text) => setForm((prev) => ({ ...prev, interval: text }))}
+                />
+              </>
+            )}
+            {error && <Text style={{ color: tokens.colors.red }}>{error}</Text>}
+          </View>
+          <View style={styles.actionsRow}>
+            <Button mode="contained" buttonColor={tokens.colors.accent} onPress={saveEntry}>
+              Salva
             </Button>
-          ))}
-        </Card.Content>
-      </GlassCard>
-    </ScrollView>
+            <Button mode="outlined" textColor={tokens.colors.text} onPress={() => setForm(emptyForm)}>
+              Reset
+            </Button>
+            {form.id && (
+              <Button mode="outlined" textColor={tokens.colors.red} onPress={removeEntry}>
+                Elimina
+              </Button>
+            )}
+          </View>
+        </PremiumCard>
+
+        {mode === "expense" && (
+          <PremiumCard>
+            <SectionHeader title="Categorie spesa" />
+            <View style={styles.form}>
+              <TextInput
+                label="Nuova categoria"
+                value={newCategory}
+                mode="outlined"
+                outlineColor={tokens.colors.border}
+                activeOutlineColor={tokens.colors.accent}
+                textColor={tokens.colors.text}
+                style={{ backgroundColor: tokens.colors.surface2 }}
+                onChangeText={setNewCategory}
+              />
+              <Button mode="contained" buttonColor={tokens.colors.accent} onPress={addCategory}>
+                Aggiungi
+              </Button>
+              {categories.map((cat) => (
+                <List.Accordion
+                  key={cat.id}
+                  title={categoryEdits[cat.id] ?? cat.name}
+                  description={cat.active === 1 ? "Attiva" : "Disattiva"}
+                  left={(props) => <List.Icon {...props} icon="tag" />}
+                  style={{ marginTop: 8, backgroundColor: tokens.colors.surface2 }}
+                  titleStyle={{ color: tokens.colors.text }}
+                  descriptionStyle={{ color: tokens.colors.muted }}
+                >
+                  <View style={styles.form}>
+                    <TextInput
+                      label="Nome categoria"
+                      value={categoryEdits[cat.id] ?? cat.name}
+                      mode="outlined"
+                      outlineColor={tokens.colors.border}
+                      activeOutlineColor={tokens.colors.accent}
+                      textColor={tokens.colors.text}
+                      style={{ backgroundColor: tokens.colors.surface }}
+                      onChangeText={(value) =>
+                        setCategoryEdits((prev) => ({
+                          ...prev,
+                          [cat.id]: value,
+                        }))
+                      }
+                    />
+                    <View style={styles.actionsRow}>
+                      <Button mode="contained" buttonColor={tokens.colors.accent} onPress={() => saveCategory(cat.id)}>
+                        Salva
+                      </Button>
+                      <Button
+                        mode="outlined"
+                        textColor={tokens.colors.text}
+                        onPress={async () => {
+                          await setExpenseCategoryActive(cat.id, cat.active === 1 ? 0 : 1);
+                          await load();
+                        }}
+                      >
+                        {cat.active === 1 ? "Disattiva" : "Attiva"}
+                      </Button>
+                      <Button mode="outlined" textColor={tokens.colors.red} onPress={() => removeCategory(cat.id)}>
+                        Elimina
+                      </Button>
+                    </View>
+                  </View>
+                </List.Accordion>
+              ))}
+            </View>
+          </PremiumCard>
+        )}
+
+        <PremiumCard>
+          <SectionHeader title="Lista" />
+          <View style={styles.list}>
+            {entries.length === 0 && <Text style={{ color: tokens.colors.muted }}>Nessuna voce.</Text>}
+            {entries.map((entry) => (
+              <Button key={`${mode}-${entry.id}`} onPress={() => applyEntryToForm(entry, mode)}>
+                {entry.start_date} • {entry.name} • {entry.amount.toFixed(2)}
+              </Button>
+            ))}
+          </View>
+        </PremiumCard>
+      </ScrollView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
+  container: {
+    padding: 16,
+  },
+  form: {
+    gap: 12,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  actionsRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 12,
+    flexWrap: "wrap",
+  },
+  list: {
+    gap: 8,
+  },
+});

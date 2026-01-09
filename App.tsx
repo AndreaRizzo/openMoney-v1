@@ -13,6 +13,7 @@ import { ThemeContext } from "@/ui/theme";
 import GlassTabBar from "@/ui/components/GlassTabBar";
 import AppBackground from "@/ui/components/AppBackground";
 import AppBootScreen from "@/ui/components/AppBootScreen";
+import { DashboardThemeProvider } from "@/ui/dashboard/theme";
 
 enableScreens(false);
 
@@ -27,28 +28,30 @@ export default function App(): JSX.Element {
   return (
     <ThemeContext.Provider value={{ mode: themeMode, setMode: setThemeMode }}>
       <PaperProvider theme={paperTheme}>
-        <AppBackground>
-          {!ready ? (
-            <AppBootScreen status="loading" />
-          ) : error ? (
-            <AppBootScreen status="error" error={error} onRetry={retry} />
-          ) : (
-            <NavigationContainer theme={navTheme}>
-              <Tab.Navigator
-                screenOptions={({ route }) => ({
-                  headerTitleAlign: "center",
-                  tabBarStyle: { display: "none" },
-                })}
-                tabBar={(props) => <GlassTabBar {...props} />}
-              >
-                <Tab.Screen name="Dashboard" component={DashboardScreen} />
-                <Tab.Screen name="Snapshot" component={SnapshotScreen} />
-                <Tab.Screen name="Entrate/Uscite" component={EntriesScreen} />
-                <Tab.Screen name="Impostazioni" component={SettingsScreen} />
-              </Tab.Navigator>
-            </NavigationContainer>
-          )}
-        </AppBackground>
+        <DashboardThemeProvider isDark={paperTheme.dark}>
+          <AppBackground>
+            {!ready ? (
+              <AppBootScreen status="loading" />
+            ) : error ? (
+              <AppBootScreen status="error" error={error} onRetry={retry} />
+            ) : (
+              <NavigationContainer theme={navTheme}>
+                <Tab.Navigator
+                  screenOptions={({ route }) => ({
+                    headerTitleAlign: "center",
+                    tabBarStyle: { display: "none" },
+                  })}
+                  tabBar={(props) => <GlassTabBar {...props} />}
+                >
+                  <Tab.Screen name="Dashboard" component={DashboardScreen} />
+                  <Tab.Screen name="Snapshot" component={SnapshotScreen} />
+                  <Tab.Screen name="Entrate/Uscite" component={EntriesScreen} />
+                  <Tab.Screen name="Impostazioni" component={SettingsScreen} />
+                </Tab.Navigator>
+              </NavigationContainer>
+            )}
+          </AppBackground>
+        </DashboardThemeProvider>
       </PaperProvider>
     </ThemeContext.Provider>
   );

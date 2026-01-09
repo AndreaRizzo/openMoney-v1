@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Platform, RefreshControl, ScrollView } from "react-native";
+import { Alert, Platform, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Button, Card, Text, TextInput } from "react-native-paper";
-import GlassCard from "@/ui/components/GlassCard";
+import { Button, Text, TextInput } from "react-native-paper";
 import { useRoute } from "@react-navigation/native";
 import {
   createSnapshotWithLines,
@@ -17,6 +16,9 @@ import { getPreference } from "@/repositories/preferencesRepo";
 import type { Snapshot, SnapshotLineDetail, Wallet } from "@/repositories/types";
 import { isIsoDate, todayIso } from "@/utils/dates";
 import { totalsByWalletType } from "@/domain/calculations";
+import PremiumCard from "@/ui/dashboard/components/PremiumCard";
+import SectionHeader from "@/ui/dashboard/components/SectionHeader";
+import { useDashboardTheme } from "@/ui/dashboard/theme";
 
 type DraftLine = {
   walletId: number;
@@ -24,6 +26,7 @@ type DraftLine = {
 };
 
 export default function SnapshotScreen(): JSX.Element {
+  const { tokens } = useDashboardTheme();
   const route = useRoute();
   const openNew = (route.params as { openNew?: boolean } | undefined)?.openNew;
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
@@ -204,109 +207,150 @@ export default function SnapshotScreen(): JSX.Element {
   }, [wallets]);
 
   return (
-    <ScrollView
-      contentContainerStyle={{ padding: 16, gap: 16 }}
-      alwaysBounceVertical
-      bounces
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
-      <GlassCard>
-        <Card.Title title="Snapshot" />
-        <Card.Content>
-          <Button onPress={openNewSnapshot}>Nuovo Snapshot</Button>
-        </Card.Content>
-      </GlassCard>
+    <View style={[styles.screen, { backgroundColor: tokens.colors.bg }]}>
+      <ScrollView
+        contentContainerStyle={[styles.container, { gap: tokens.spacing.md }]}
+        alwaysBounceVertical
+        bounces
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tokens.colors.accent} />}
+      >
+        <PremiumCard>
+          <SectionHeader title="Snapshot" />
+          <View style={styles.actionsRow}>
+            <Button mode="contained" buttonColor={tokens.colors.accent} onPress={openNewSnapshot}>
+              Nuovo Snapshot
+            </Button>
+          </View>
+        </PremiumCard>
 
-      {showForm && (
-        <GlassCard>
-          <Card.Title title={editingSnapshotId ? "Modifica snapshot" : "Nuovo snapshot"} />
-          <Card.Content style={{ gap: 8 }}>
-            <TextInput
-              label="Data"
-              value={snapshotDate}
-              editable={false}
-              onPressIn={() => setShowDatePicker(true)}
-            />
-            {showDatePicker && (
-              <DateTimePicker
-                value={datePickerValue}
-                mode="date"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
-                onChange={(_, selected) => {
-                  if (selected) {
-                    setSnapshotDate(toIsoDate(selected));
-                  }
-                  setShowDatePicker(false);
-                }}
+        {showForm && (
+          <PremiumCard>
+            <SectionHeader title={editingSnapshotId ? "Modifica snapshot" : "Nuovo snapshot"} />
+            <View style={styles.form}>
+              <TextInput
+                label="Data"
+                value={snapshotDate}
+                editable={false}
+                mode="outlined"
+                outlineColor={tokens.colors.border}
+                activeOutlineColor={tokens.colors.accent}
+                textColor={tokens.colors.text}
+                style={{ backgroundColor: tokens.colors.surface2 }}
+                onPressIn={() => setShowDatePicker(true)}
               />
-            )}
-            {draftLines.map((line, index) => {
-              const wallet = orderedWallets.find((item) => item.id === line.walletId);
-              const walletTitle = wallet
-                ? wallet.type === "INVEST"
-                  ? `${wallet.tag || "Tipo investimento"} - ${wallet.name} - ${wallet.currency}`
-                  : `${wallet.name} - ${wallet.currency}`
-                : `Wallet #${line.walletId}`;
-              return (
-                <GlassCard key={`${line.walletId}-${index}`} style={{ marginTop: 8 }}>
-                  <Card.Title title={walletTitle} />
-                  <Card.Content style={{ gap: 8 }}>
+              {showDatePicker && (
+                <DateTimePicker
+                  value={datePickerValue}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={(_, selected) => {
+                    if (selected) {
+                      setSnapshotDate(toIsoDate(selected));
+                    }
+                    setShowDatePicker(false);
+                  }}
+                />
+              )}
+              {draftLines.map((line, index) => {
+                const wallet = orderedWallets.find((item) => item.id === line.walletId);
+                const walletTitle = wallet
+                  ? wallet.type === "INVEST"
+                    ? `${wallet.tag || "Tipo investimento"} - ${wallet.name} - ${wallet.currency}`
+                    : `${wallet.name} - ${wallet.currency}`
+                  : `Wallet #${line.walletId}`;
+                return (
+                  <PremiumCard key={`${line.walletId}-${index}`} style={{ backgroundColor: tokens.colors.surface2 }}>
+                    <SectionHeader title={walletTitle} />
                     <TextInput
                       keyboardType="decimal-pad"
                       value={line.amount}
+                      mode="outlined"
+                      outlineColor={tokens.colors.border}
+                      activeOutlineColor={tokens.colors.accent}
+                      textColor={tokens.colors.text}
+                      style={{ backgroundColor: tokens.colors.surface }}
                       onChangeText={(value) => updateDraftLine(index, { amount: value })}
                     />
-                  </Card.Content>
-                </GlassCard>
-              );
-            })}
-            {error && <Text style={{ color: "crimson" }}>{error}</Text>}
-          </Card.Content>
-          <Card.Actions>
-            <Button onPress={saveSnapshot}>Salva</Button>
-            <Button onPress={() => setShowForm(false)}>Chiudi</Button>
-          </Card.Actions>
-        </GlassCard>
-      )}
+                  </PremiumCard>
+                );
+              })}
+              {error && <Text style={{ color: tokens.colors.red }}>{error}</Text>}
+            </View>
+            <View style={styles.actionsRow}>
+              <Button mode="contained" buttonColor={tokens.colors.accent} onPress={saveSnapshot}>
+                Salva
+              </Button>
+              <Button mode="outlined" textColor={tokens.colors.text} onPress={() => setShowForm(false)}>
+                Chiudi
+              </Button>
+            </View>
+          </PremiumCard>
+        )}
 
-      <GlassCard>
-        <Card.Title title="Lista snapshot" />
-        <Card.Content>
-          {snapshots.length === 0 && <Text>Nessuno snapshot.</Text>}
-          {snapshots.map((snapshot) => (
-            <Button
-              key={snapshot.id}
-              onPress={() => {
-                setSelectedSnapshotId(snapshot.id);
-                void openEditSnapshot(snapshot.id);
-              }}
-              mode={snapshot.id === selectedSnapshotId ? "contained" : "text"}
-            >
-              {snapshot.date}
-            </Button>
-          ))}
-        </Card.Content>
-      </GlassCard>
+        <PremiumCard>
+          <SectionHeader title="Lista snapshot" />
+          <View style={styles.list}>
+            {snapshots.length === 0 && <Text style={{ color: tokens.colors.muted }}>Nessuno snapshot.</Text>}
+            {snapshots.map((snapshot) => (
+              <Button
+                key={snapshot.id}
+                onPress={() => {
+                  setSelectedSnapshotId(snapshot.id);
+                  void openEditSnapshot(snapshot.id);
+                }}
+                mode={snapshot.id === selectedSnapshotId ? "contained" : "outlined"}
+                buttonColor={snapshot.id === selectedSnapshotId ? tokens.colors.accent : undefined}
+                textColor={snapshot.id === selectedSnapshotId ? tokens.colors.text : tokens.colors.muted}
+              >
+                {snapshot.date}
+              </Button>
+            ))}
+          </View>
+        </PremiumCard>
 
-      <GlassCard>
-        <Card.Title title="Dettaglio" />
-        <Card.Content>
-          {lines.length === 0 && <Text>Nessuna linea.</Text>}
-          {lines.map((line) => (
-            <Text key={line.id}>
-              {line.wallet_name ?? "Sconosciuto"} • {line.amount.toFixed(2)}
-            </Text>
-          ))}
-          {lines.length > 0 && (
-            <>
-              <Text>Liquidità: {totals.liquidity.toFixed(2)}</Text>
-              <Text>Investimenti: {totals.investments.toFixed(2)}</Text>
-              <Text>Patrimonio: {totals.netWorth.toFixed(2)}</Text>
-            </>
-          )}
-        </Card.Content>
-      </GlassCard>
-
-    </ScrollView>
+        <PremiumCard>
+          <SectionHeader title="Dettaglio" />
+          <View style={styles.list}>
+            {lines.length === 0 && <Text style={{ color: tokens.colors.muted }}>Nessuna linea.</Text>}
+            {lines.map((line) => (
+              <Text key={line.id} style={{ color: tokens.colors.text }}>
+                {line.wallet_name ?? "Sconosciuto"} • {line.amount.toFixed(2)}
+              </Text>
+            ))}
+            {lines.length > 0 && (
+              <View style={styles.totals}>
+                <Text style={{ color: tokens.colors.muted }}>Liquidità: {totals.liquidity.toFixed(2)}</Text>
+                <Text style={{ color: tokens.colors.muted }}>Investimenti: {totals.investments.toFixed(2)}</Text>
+                <Text style={{ color: tokens.colors.text }}>Patrimonio: {totals.netWorth.toFixed(2)}</Text>
+              </View>
+            )}
+          </View>
+        </PremiumCard>
+      </ScrollView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
+  container: {
+    padding: 16,
+  },
+  form: {
+    gap: 12,
+  },
+  actionsRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 12,
+  },
+  list: {
+    gap: 8,
+  },
+  totals: {
+    marginTop: 8,
+    gap: 4,
+  },
+});

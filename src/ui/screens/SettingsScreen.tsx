@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { Alert, Platform, RefreshControl, ScrollView } from "react-native";
-import { Button, Card, List, SegmentedButtons, Switch, Text, TextInput } from "react-native-paper";
+import { Alert, Platform, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { Button, List, SegmentedButtons, Switch, Text, TextInput } from "react-native-paper";
 import * as FileSystem from "expo-file-system";
 import * as LegacyFileSystem from "expo-file-system/legacy";
 import * as DocumentPicker from "expo-document-picker";
@@ -8,7 +8,9 @@ import * as Sharing from "expo-sharing";
 import * as Clipboard from "expo-clipboard";
 import { exportToFile, exportToJson, importFromFile, importFromJson } from "@/importExport";
 import { runMigrations } from "@/db/db";
-import GlassCard from "@/ui/components/GlassCard";
+import PremiumCard from "@/ui/dashboard/components/PremiumCard";
+import SectionHeader from "@/ui/dashboard/components/SectionHeader";
+import { useDashboardTheme } from "@/ui/dashboard/theme";
 import { createWallet, deleteWallet, ensureDefaultWallets, listWallets, updateWallet } from "@/repositories/walletsRepo";
 import { getPreference, setPreference } from "@/repositories/preferencesRepo";
 import { withTransaction } from "@/db/db";
@@ -16,6 +18,7 @@ import { ThemeContext } from "@/ui/theme";
 import type { Wallet, Currency } from "@/repositories/types";
 
 export default function SettingsScreen(): JSX.Element {
+  const { tokens } = useDashboardTheme();
   const [message, setMessage] = useState<string | null>(null);
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [walletEdits, setWalletEdits] = useState<Record<number, { name: string; tag: string; currency: Currency }>>({});
@@ -257,325 +260,403 @@ export default function SettingsScreen(): JSX.Element {
     [wallets]
   );
 
+  const inputProps = {
+    mode: "outlined" as const,
+    outlineColor: tokens.colors.border,
+    activeOutlineColor: tokens.colors.accent,
+    textColor: tokens.colors.text,
+    style: { backgroundColor: tokens.colors.surface2 },
+  };
+
   return (
-    <ScrollView
-      contentContainerStyle={{ padding: 16, gap: 16 }}
-      alwaysBounceVertical
-      bounces
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
-      <GlassCard>
-        <Card.Title title="Wallet" />
-        <Card.Content style={{ gap: 12 }}>
-          <SegmentedButtons
-            value={tab}
-            onValueChange={(value) => setTab(value as "LIQUIDITY" | "INVEST")}
-            buttons={[
-              { value: "LIQUIDITY", label: "Liquidità" },
-              { value: "INVEST", label: "Investimenti" },
-            ]}
-          />
-
-          {tab === "LIQUIDITY" && (
-            <>
-              {!showAddWallet.LIQUIDITY && (
-                <Button mode="contained" onPress={() => setShowAddWallet((prev) => ({ ...prev, LIQUIDITY: true }))}>
-                  Aggiungi wallet
-                </Button>
-              )}
-              {showAddWallet.LIQUIDITY && (
-                <GlassCard style={{ marginTop: 8 }}>
-                  <Card.Title title="Nuovo wallet liquidità" />
-                  <Card.Content style={{ gap: 8 }}>
-                    <TextInput
-                      label="Nome"
-                      value={newWalletDraft.name}
-                      onChangeText={(value) => setNewWalletDraft((prev) => ({ ...prev, name: value }))}
-                    />
-                    <SegmentedButtons
-                      value={newWalletDraft.currency}
-                      onValueChange={(value) => setNewWalletDraft((prev) => ({ ...prev, currency: value as Currency }))}
-                      buttons={[
-                        { value: "EUR", label: "EUR" },
-                        { value: "USD", label: "USD" },
-                        { value: "GBP", label: "GBP" },
-                      ]}
-                    />
-                  </Card.Content>
-                  <Card.Actions>
-                    <Button onPress={() => addWallet("LIQUIDITY")}>Aggiungi</Button>
-                    <Button onPress={() => setShowAddWallet((prev) => ({ ...prev, LIQUIDITY: false }))}>
-                      Annulla
-                    </Button>
-                  </Card.Actions>
-                </GlassCard>
-              )}
-
-              {liquidityWallets.map((wallet) => (
-                <List.Accordion
-                  key={wallet.id}
-                  title={walletEdits[wallet.id]?.name ?? wallet.name}
-                  description={`${walletEdits[wallet.id]?.currency ?? wallet.currency}${
-                    wallet.active === 0 ? " • disattivo" : ""
-                  }`}
-                  left={(props) => <List.Icon {...props} icon="wallet" />}
-                  style={{ marginTop: 8 }}
-                >
-                  <Card.Content style={{ gap: 8 }}>
-                    <TextInput
-                      label="Nome"
-                      value={walletEdits[wallet.id]?.name ?? wallet.name}
-                      onChangeText={(value) =>
-                        setWalletEdits((prev) => ({
-                          ...prev,
-                          [wallet.id]: { ...prev[wallet.id], name: value },
-                        }))
-                      }
-                    />
-                    <SegmentedButtons
-                      value={walletEdits[wallet.id]?.currency ?? wallet.currency}
-                      onValueChange={(value) =>
-                        setWalletEdits((prev) => ({
-                          ...prev,
-                          [wallet.id]: { ...prev[wallet.id], currency: value as Currency },
-                        }))
-                      }
-                      buttons={[
-                        { value: "EUR", label: "EUR" },
-                        { value: "USD", label: "USD" },
-                        { value: "GBP", label: "GBP" },
-                      ]}
-                    />
-                    <Card.Actions>
-                      <Button
-                        onPress={async () => {
-                          const edit = walletEdits[wallet.id];
-                          if (!edit) return;
-                          await updateWallet(
-                            wallet.id,
-                            edit.name,
-                            wallet.type,
-                            edit.currency,
-                            null,
-                            wallet.active
-                          );
-                          await load();
-                        }}
-                      >
-                        Salva
-                      </Button>
-                      <Button onPress={() => toggleWalletActive(wallet)}>
-                        {wallet.active === 1 ? "Disattiva" : "Attiva"}
-                      </Button>
-                      <Button
-                        onPress={async () => {
-                          await deleteWallet(wallet.id);
-                          await load();
-                        }}
-                      >
-                        Elimina
-                      </Button>
-                    </Card.Actions>
-                  </Card.Content>
-                </List.Accordion>
-              ))}
-            </>
-          )}
-
-          {tab === "INVEST" && (
-            <>
-              {!showAddWallet.INVEST && (
-                <Button mode="contained" onPress={() => setShowAddWallet((prev) => ({ ...prev, INVEST: true }))}>
-                  Aggiungi wallet
-                </Button>
-              )}
-              {showAddWallet.INVEST && (
-                <GlassCard style={{ marginTop: 8 }}>
-                  <Card.Title title="Nuovo wallet investimenti" />
-                  <Card.Content style={{ gap: 8 }}>
-                    <TextInput
-                      label="Broker"
-                      value={newWalletDraft.name}
-                      onChangeText={(value) => setNewWalletDraft((prev) => ({ ...prev, name: value }))}
-                    />
-                    <TextInput
-                      label="Tipo investimento"
-                      value={newWalletDraft.tag}
-                      onChangeText={(value) => setNewWalletDraft((prev) => ({ ...prev, tag: value }))}
-                    />
-                    <SegmentedButtons
-                      value={newWalletDraft.currency}
-                      onValueChange={(value) => setNewWalletDraft((prev) => ({ ...prev, currency: value as Currency }))}
-                      buttons={[
-                        { value: "EUR", label: "EUR" },
-                        { value: "USD", label: "USD" },
-                        { value: "GBP", label: "GBP" },
-                      ]}
-                    />
-                  </Card.Content>
-                  <Card.Actions>
-                    <Button onPress={() => addWallet("INVEST")}>Aggiungi</Button>
-                    <Button onPress={() => setShowAddWallet((prev) => ({ ...prev, INVEST: false }))}>
-                      Annulla
-                    </Button>
-                  </Card.Actions>
-                </GlassCard>
-              )}
-
-              {investmentWallets.map((wallet) => (
-                <List.Accordion
-                  key={wallet.id}
-                  title={walletEdits[wallet.id]?.name ?? wallet.name}
-                  description={`${walletEdits[wallet.id]?.currency ?? wallet.currency}${
-                    walletEdits[wallet.id]?.tag || wallet.tag ? ` • ${walletEdits[wallet.id]?.tag ?? wallet.tag}` : ""
-                  }${wallet.active === 0 ? " • disattivo" : ""}`}
-                  left={(props) => <List.Icon {...props} icon="wallet" />}
-                  style={{ marginTop: 8 }}
-                >
-                  <Card.Content style={{ gap: 8 }}>
-                    <TextInput
-                      label="Broker"
-                      value={walletEdits[wallet.id]?.name ?? wallet.name}
-                      onChangeText={(value) =>
-                        setWalletEdits((prev) => ({
-                          ...prev,
-                          [wallet.id]: { ...prev[wallet.id], name: value },
-                        }))
-                      }
-                    />
-                    <TextInput
-                      label="Tipo investimento"
-                      value={walletEdits[wallet.id]?.tag ?? wallet.tag ?? ""}
-                      onChangeText={(value) =>
-                        setWalletEdits((prev) => ({
-                          ...prev,
-                          [wallet.id]: { ...prev[wallet.id], tag: value },
-                        }))
-                      }
-                    />
-                    <SegmentedButtons
-                      value={walletEdits[wallet.id]?.currency ?? wallet.currency}
-                      onValueChange={(value) =>
-                        setWalletEdits((prev) => ({
-                          ...prev,
-                          [wallet.id]: { ...prev[wallet.id], currency: value as Currency },
-                        }))
-                      }
-                      buttons={[
-                        { value: "EUR", label: "EUR" },
-                        { value: "USD", label: "USD" },
-                        { value: "GBP", label: "GBP" },
-                      ]}
-                    />
-                    <Card.Actions>
-                      <Button
-                        onPress={async () => {
-                          const edit = walletEdits[wallet.id];
-                          if (!edit) return;
-                          await updateWallet(
-                            wallet.id,
-                            edit.name,
-                            wallet.type,
-                            edit.currency,
-                            edit.tag || null,
-                            wallet.active
-                          );
-                          await load();
-                        }}
-                      >
-                        Salva
-                      </Button>
-                      <Button onPress={() => toggleWalletActive(wallet)}>
-                        {wallet.active === 1 ? "Disattiva" : "Attiva"}
-                      </Button>
-                      <Button
-                        onPress={async () => {
-                          await deleteWallet(wallet.id);
-                          await load();
-                        }}
-                      >
-                        Elimina
-                      </Button>
-                    </Card.Actions>
-                  </Card.Content>
-                </List.Accordion>
-              ))}
-            </>
-          )}
-        </Card.Content>
-      </GlassCard>
-
-      <GlassCard>
-        <Card.Title title="Preferenze" />
-        <Card.Content style={{ gap: 8 }}>
-          <Card.Content style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Switch
-              value={mode === "dark"}
-              onValueChange={(value) => {
-                const next = value ? "dark" : "light";
-                setMode(next);
-                updatePreference("theme", next);
-              }}
+    <View style={[styles.screen, { backgroundColor: tokens.colors.bg }]}>
+      <ScrollView
+        contentContainerStyle={[styles.container, { gap: tokens.spacing.md }]}
+        alwaysBounceVertical
+        bounces
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tokens.colors.accent} />}
+      >
+        <PremiumCard>
+          <SectionHeader title="Wallet" />
+          <View style={styles.sectionContent}>
+            <SegmentedButtons
+              value={tab}
+              onValueChange={(value) => setTab(value as "LIQUIDITY" | "INVEST")}
+              buttons={[
+                { value: "LIQUIDITY", label: "Liquidità" },
+                { value: "INVEST", label: "Investimenti" },
+              ]}
+              style={{ backgroundColor: tokens.colors.surface2 }}
             />
-            <Text>Tema scuro</Text>
-          </Card.Content>
-          <Card.Content style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Switch
-              value={askSnapshot}
-              onValueChange={(value) => {
-                setAskSnapshot(value);
-                updatePreference("ask_snapshot_on_start", String(value));
-              }}
-            />
-            <Text>Chiedi snapshot all'avvio</Text>
-          </Card.Content>
-          <Card.Content style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Switch
-              value={prefillSnapshot}
-              onValueChange={(value) => {
-                setPrefillSnapshot(value);
-                updatePreference("prefill_snapshot", String(value));
-              }}
-            />
-            <Text>Precompila snapshot</Text>
-          </Card.Content>
-          <Card.Content style={{ flexDirection: "row", alignItems: "center", gap: 12, marginTop: 8 }}>
-            <Text>Mesi nel grafico</Text>
-            <Button
-              mode="outlined"
-              onPress={() => {
-                const next = Math.max(3, chartMonths - 1);
-                setChartMonths(next);
-                updatePreference("chart_points", String(next));
-              }}
-            >
-              -
+
+            {tab === "LIQUIDITY" && (
+              <>
+                {!showAddWallet.LIQUIDITY && (
+                  <Button
+                    mode="contained"
+                    buttonColor={tokens.colors.accent}
+                    onPress={() => setShowAddWallet((prev) => ({ ...prev, LIQUIDITY: true }))}
+                  >
+                    Aggiungi wallet
+                  </Button>
+                )}
+                {showAddWallet.LIQUIDITY && (
+                  <PremiumCard style={{ backgroundColor: tokens.colors.surface2 }}>
+                    <SectionHeader title="Nuovo wallet liquidità" />
+                    <View style={styles.sectionContent}>
+                      <TextInput
+                        label="Nome"
+                        value={newWalletDraft.name}
+                        {...inputProps}
+                        onChangeText={(value) => setNewWalletDraft((prev) => ({ ...prev, name: value }))}
+                      />
+                      <SegmentedButtons
+                        value={newWalletDraft.currency}
+                        onValueChange={(value) => setNewWalletDraft((prev) => ({ ...prev, currency: value as Currency }))}
+                        buttons={[
+                          { value: "EUR", label: "EUR" },
+                          { value: "USD", label: "USD" },
+                          { value: "GBP", label: "GBP" },
+                        ]}
+                        style={{ backgroundColor: tokens.colors.surface }}
+                      />
+                    </View>
+                    <View style={styles.actionsRow}>
+                      <Button mode="contained" buttonColor={tokens.colors.accent} onPress={() => addWallet("LIQUIDITY")}>
+                        Aggiungi
+                      </Button>
+                      <Button mode="outlined" textColor={tokens.colors.text} onPress={() => setShowAddWallet((prev) => ({ ...prev, LIQUIDITY: false }))}>
+                        Annulla
+                      </Button>
+                    </View>
+                  </PremiumCard>
+                )}
+
+                {liquidityWallets.map((wallet) => (
+                  <List.Accordion
+                    key={wallet.id}
+                    title={walletEdits[wallet.id]?.name ?? wallet.name}
+                    description={`${walletEdits[wallet.id]?.currency ?? wallet.currency}${
+                      wallet.active === 0 ? " • disattivo" : ""
+                    }`}
+                    left={(props) => <List.Icon {...props} icon="wallet" />}
+                    style={{ marginTop: 8, backgroundColor: tokens.colors.surface2 }}
+                    titleStyle={{ color: tokens.colors.text }}
+                    descriptionStyle={{ color: tokens.colors.muted }}
+                  >
+                    <View style={styles.sectionContent}>
+                      <TextInput
+                        label="Nome"
+                        value={walletEdits[wallet.id]?.name ?? wallet.name}
+                        {...inputProps}
+                        onChangeText={(value) =>
+                          setWalletEdits((prev) => ({
+                            ...prev,
+                            [wallet.id]: { ...prev[wallet.id], name: value },
+                          }))
+                        }
+                      />
+                      <SegmentedButtons
+                        value={walletEdits[wallet.id]?.currency ?? wallet.currency}
+                        onValueChange={(value) =>
+                          setWalletEdits((prev) => ({
+                            ...prev,
+                            [wallet.id]: { ...prev[wallet.id], currency: value as Currency },
+                          }))
+                        }
+                        buttons={[
+                          { value: "EUR", label: "EUR" },
+                          { value: "USD", label: "USD" },
+                          { value: "GBP", label: "GBP" },
+                        ]}
+                        style={{ backgroundColor: tokens.colors.surface }}
+                      />
+                      <View style={styles.actionsRow}>
+                        <Button
+                          mode="contained"
+                          buttonColor={tokens.colors.accent}
+                          onPress={async () => {
+                            const edit = walletEdits[wallet.id];
+                            if (!edit) return;
+                            await updateWallet(
+                              wallet.id,
+                              edit.name,
+                              wallet.type,
+                              edit.currency,
+                              null,
+                              wallet.active
+                            );
+                            await load();
+                          }}
+                        >
+                          Salva
+                        </Button>
+                        <Button mode="outlined" textColor={tokens.colors.text} onPress={() => toggleWalletActive(wallet)}>
+                          {wallet.active === 1 ? "Disattiva" : "Attiva"}
+                        </Button>
+                        <Button
+                          mode="outlined"
+                          textColor={tokens.colors.red}
+                          onPress={async () => {
+                            await deleteWallet(wallet.id);
+                            await load();
+                          }}
+                        >
+                          Elimina
+                        </Button>
+                      </View>
+                    </View>
+                  </List.Accordion>
+                ))}
+              </>
+            )}
+
+            {tab === "INVEST" && (
+              <>
+                {!showAddWallet.INVEST && (
+                  <Button
+                    mode="contained"
+                    buttonColor={tokens.colors.accent}
+                    onPress={() => setShowAddWallet((prev) => ({ ...prev, INVEST: true }))}
+                  >
+                    Aggiungi wallet
+                  </Button>
+                )}
+                {showAddWallet.INVEST && (
+                  <PremiumCard style={{ backgroundColor: tokens.colors.surface2 }}>
+                    <SectionHeader title="Nuovo wallet investimenti" />
+                    <View style={styles.sectionContent}>
+                      <TextInput
+                        label="Broker"
+                        value={newWalletDraft.name}
+                        {...inputProps}
+                        onChangeText={(value) => setNewWalletDraft((prev) => ({ ...prev, name: value }))}
+                      />
+                      <TextInput
+                        label="Tipo investimento"
+                        value={newWalletDraft.tag}
+                        {...inputProps}
+                        onChangeText={(value) => setNewWalletDraft((prev) => ({ ...prev, tag: value }))}
+                      />
+                      <SegmentedButtons
+                        value={newWalletDraft.currency}
+                        onValueChange={(value) => setNewWalletDraft((prev) => ({ ...prev, currency: value as Currency }))}
+                        buttons={[
+                          { value: "EUR", label: "EUR" },
+                          { value: "USD", label: "USD" },
+                          { value: "GBP", label: "GBP" },
+                        ]}
+                        style={{ backgroundColor: tokens.colors.surface }}
+                      />
+                    </View>
+                    <View style={styles.actionsRow}>
+                      <Button mode="contained" buttonColor={tokens.colors.accent} onPress={() => addWallet("INVEST")}>
+                        Aggiungi
+                      </Button>
+                      <Button mode="outlined" textColor={tokens.colors.text} onPress={() => setShowAddWallet((prev) => ({ ...prev, INVEST: false }))}>
+                        Annulla
+                      </Button>
+                    </View>
+                  </PremiumCard>
+                )}
+
+                {investmentWallets.map((wallet) => (
+                  <List.Accordion
+                    key={wallet.id}
+                    title={walletEdits[wallet.id]?.name ?? wallet.name}
+                    description={`${walletEdits[wallet.id]?.currency ?? wallet.currency}${
+                      walletEdits[wallet.id]?.tag || wallet.tag ? ` • ${walletEdits[wallet.id]?.tag ?? wallet.tag}` : ""
+                    }${wallet.active === 0 ? " • disattivo" : ""}`}
+                    left={(props) => <List.Icon {...props} icon="wallet" />}
+                    style={{ marginTop: 8, backgroundColor: tokens.colors.surface2 }}
+                    titleStyle={{ color: tokens.colors.text }}
+                    descriptionStyle={{ color: tokens.colors.muted }}
+                  >
+                    <View style={styles.sectionContent}>
+                      <TextInput
+                        label="Broker"
+                        value={walletEdits[wallet.id]?.name ?? wallet.name}
+                        {...inputProps}
+                        onChangeText={(value) =>
+                          setWalletEdits((prev) => ({
+                            ...prev,
+                            [wallet.id]: { ...prev[wallet.id], name: value },
+                          }))
+                        }
+                      />
+                      <TextInput
+                        label="Tipo investimento"
+                        value={walletEdits[wallet.id]?.tag ?? wallet.tag ?? ""}
+                        {...inputProps}
+                        onChangeText={(value) =>
+                          setWalletEdits((prev) => ({
+                            ...prev,
+                            [wallet.id]: { ...prev[wallet.id], tag: value },
+                          }))
+                        }
+                      />
+                      <SegmentedButtons
+                        value={walletEdits[wallet.id]?.currency ?? wallet.currency}
+                        onValueChange={(value) =>
+                          setWalletEdits((prev) => ({
+                            ...prev,
+                            [wallet.id]: { ...prev[wallet.id], currency: value as Currency },
+                          }))
+                        }
+                        buttons={[
+                          { value: "EUR", label: "EUR" },
+                          { value: "USD", label: "USD" },
+                          { value: "GBP", label: "GBP" },
+                        ]}
+                        style={{ backgroundColor: tokens.colors.surface }}
+                      />
+                      <View style={styles.actionsRow}>
+                        <Button
+                          mode="contained"
+                          buttonColor={tokens.colors.accent}
+                          onPress={async () => {
+                            const edit = walletEdits[wallet.id];
+                            if (!edit) return;
+                            await updateWallet(
+                              wallet.id,
+                              edit.name,
+                              wallet.type,
+                              edit.currency,
+                              edit.tag || null,
+                              wallet.active
+                            );
+                            await load();
+                          }}
+                        >
+                          Salva
+                        </Button>
+                        <Button mode="outlined" textColor={tokens.colors.text} onPress={() => toggleWalletActive(wallet)}>
+                          {wallet.active === 1 ? "Disattiva" : "Attiva"}
+                        </Button>
+                        <Button
+                          mode="outlined"
+                          textColor={tokens.colors.red}
+                          onPress={async () => {
+                            await deleteWallet(wallet.id);
+                            await load();
+                          }}
+                        >
+                          Elimina
+                        </Button>
+                      </View>
+                    </View>
+                  </List.Accordion>
+                ))}
+              </>
+            )}
+          </View>
+        </PremiumCard>
+
+        <PremiumCard>
+          <SectionHeader title="Preferenze" />
+          <View style={styles.sectionContent}>
+            <View style={styles.row}>
+              <Switch
+                value={mode === "dark"}
+                onValueChange={(value) => {
+                  const next = value ? "dark" : "light";
+                  setMode(next);
+                  updatePreference("theme", next);
+                }}
+              />
+              <Text style={{ color: tokens.colors.text }}>Tema scuro</Text>
+            </View>
+            <View style={styles.row}>
+              <Switch
+                value={askSnapshot}
+                onValueChange={(value) => {
+                  setAskSnapshot(value);
+                  updatePreference("ask_snapshot_on_start", String(value));
+                }}
+              />
+              <Text style={{ color: tokens.colors.text }}>Chiedi snapshot all'avvio</Text>
+            </View>
+            <View style={styles.row}>
+              <Switch
+                value={prefillSnapshot}
+                onValueChange={(value) => {
+                  setPrefillSnapshot(value);
+                  updatePreference("prefill_snapshot", String(value));
+                }}
+              />
+              <Text style={{ color: tokens.colors.text }}>Precompila snapshot</Text>
+            </View>
+            <View style={[styles.row, { gap: 12, marginTop: 8 }]}>
+              <Text style={{ color: tokens.colors.text }}>Mesi nel grafico</Text>
+              <Button
+                mode="outlined"
+                textColor={tokens.colors.text}
+                onPress={() => {
+                  const next = Math.max(3, chartMonths - 1);
+                  setChartMonths(next);
+                  updatePreference("chart_points", String(next));
+                }}
+              >
+                -
+              </Button>
+              <Text style={{ color: tokens.colors.text }}>{chartMonths}</Text>
+              <Button
+                mode="outlined"
+                textColor={tokens.colors.text}
+                onPress={() => {
+                  const next = Math.min(12, chartMonths + 1);
+                  setChartMonths(next);
+                  updatePreference("chart_points", String(next));
+                }}
+              >
+                +
+              </Button>
+            </View>
+          </View>
+        </PremiumCard>
+
+        <PremiumCard>
+          <SectionHeader title="Dati" />
+          <View style={styles.sectionContent}>
+            {message && <Text style={{ color: tokens.colors.muted }}>{message}</Text>}
+            <Button mode="contained" buttonColor={tokens.colors.accent} onPress={exportData}>
+              Esporta
             </Button>
-            <Text>{chartMonths}</Text>
-            <Button
-              mode="outlined"
-              onPress={() => {
-                const next = Math.min(12, chartMonths + 1);
-                setChartMonths(next);
-                updatePreference("chart_points", String(next));
-              }}
-            >
-              +
+            <Button mode="outlined" textColor={tokens.colors.text} onPress={importData}>
+              Importa
             </Button>
-          </Card.Content>
-        </Card.Content>
-      </GlassCard>
-
-      <GlassCard>
-        <Card.Title title="Dati" />
-        <Card.Content style={{ gap: 8 }}>
-          {message && <Text>{message}</Text>}
-          <Button mode="contained" onPress={exportData}>Esporta</Button>
-          <Button mode="outlined" onPress={importData}>Importa</Button>
-          <Button mode="outlined" onPress={pasteFromClipboard}>Incolla JSON dagli appunti</Button>
-          <Button mode="outlined" onPress={resetData}>Reset</Button>
-        </Card.Content>
-      </GlassCard>
-    </ScrollView>
+            <Button mode="outlined" textColor={tokens.colors.text} onPress={pasteFromClipboard}>
+              Incolla JSON dagli appunti
+            </Button>
+            <Button mode="outlined" textColor={tokens.colors.red} onPress={resetData}>
+              Reset
+            </Button>
+          </View>
+        </PremiumCard>
+      </ScrollView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
+  container: {
+    padding: 16,
+  },
+  sectionContent: {
+    gap: 12,
+  },
+  actionsRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 12,
+    flexWrap: "wrap",
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+});

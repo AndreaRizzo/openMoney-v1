@@ -1,0 +1,151 @@
+import React, { useMemo, useState } from "react";
+import { StyleSheet, View } from "react-native";
+import { Text } from "react-native-paper";
+import {
+  VictoryArea,
+  VictoryAxis,
+  VictoryChart,
+  VictoryLine,
+  VictoryTooltip,
+  VictoryVoronoiContainer,
+} from "victory-native";
+import PremiumCard from "@/ui/dashboard/components/PremiumCard";
+import PressScale from "@/ui/dashboard/components/PressScale";
+import SectionHeader from "@/ui/dashboard/components/SectionHeader";
+import { useDashboardTheme } from "@/ui/dashboard/theme";
+import { formatCompact, formatEUR, formatMonthLabel } from "@/ui/dashboard/formatters";
+import type { PortfolioPoint } from "@/ui/dashboard/types";
+
+type Mode = "total" | "liquidity" | "investments";
+
+type Props = {
+  data: PortfolioPoint[];
+};
+
+export default function PortfolioLineChartCard({ data }: Props): JSX.Element {
+  const { tokens } = useDashboardTheme();
+  const [mode, setMode] = useState<Mode>("total");
+
+  const chartData = useMemo(
+    () =>
+      data.map((point) => ({
+        x: point.date,
+        y: mode === "total" ? point.total : mode === "liquidity" ? point.liquidity : point.investments,
+      })),
+    [data, mode]
+  );
+
+  return (
+    <View>
+      <PremiumCard>
+        <SectionHeader
+          title="Andamento patrimonio"
+          trailing={
+            <View style={styles.toggleRow}>
+              {(["total", "liquidity", "investments"] as Mode[]).map((item) => {
+                const label = item === "total" ? "Totale" : item === "liquidity" ? "Liquidità" : "Investimenti";
+                const active = item === mode;
+                return (
+                  <PressScale
+                    key={item}
+                    style={[
+                      styles.toggle,
+                      { backgroundColor: tokens.colors.surface2 },
+                      active && styles.toggleActive,
+                      active && { borderColor: tokens.colors.accent },
+                    ]}
+                    onPress={() => setMode(item)}
+                  >
+                    <Text
+                      style={[
+                        styles.toggleText,
+                        { color: tokens.colors.muted },
+                        active && styles.toggleTextActive,
+                        active && { color: tokens.colors.text },
+                      ]}
+                    >
+                      {label}
+                    </Text>
+                  </PressScale>
+                );
+              })}
+            </View>
+          }
+        />
+        {chartData.length === 0 ? (
+          <Text style={[styles.empty, { color: tokens.colors.muted }]}>Nessun dato disponibile.</Text>
+        ) : (
+          <VictoryChart
+            height={240}
+            padding={{ left: 50, right: 18, top: 10, bottom: 30 }}
+            containerComponent={
+              <VictoryVoronoiContainer
+                labels={({ datum }) => `${formatMonthLabel(String(datum.x))}\n${formatEUR(datum.y)}`}
+                labelComponent={
+                  <VictoryTooltip
+                    flyoutStyle={{ fill: tokens.colors.surface2, stroke: tokens.colors.border }}
+                    style={{ fill: tokens.colors.text, fontSize: 12 }}
+                    cornerRadius={12}
+                    pointerLength={8}
+                  />
+                }
+              />
+            }
+          >
+            <VictoryAxis
+              tickFormat={(tick) => formatMonthLabel(String(tick))}
+              style={{
+                axis: { stroke: "transparent" },
+                tickLabels: { fontSize: 11, fill: tokens.colors.muted, padding: 6 },
+              }}
+            />
+            <VictoryAxis
+              dependentAxis
+              tickFormat={(tick) => formatCompact(Number(tick))}
+              style={{
+                axis: { stroke: "transparent" },
+                grid: { stroke: tokens.colors.border },
+                tickLabels: { fontSize: 11, fill: tokens.colors.muted, padding: 6 },
+              }}
+            />
+            <VictoryArea
+              data={chartData}
+              interpolation="natural"
+              style={{ data: { fill: `${tokens.colors.accent}2E` } }}
+            />
+            <VictoryLine
+              data={chartData}
+              interpolation="natural"
+              style={{ data: { stroke: tokens.colors.accent, strokeWidth: 2 } }}
+            />
+          </VictoryChart>
+        )}
+      </PremiumCard>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  toggleRow: {
+    flexDirection: "row",
+    gap: 6,
+  },
+  toggle: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  toggleActive: {
+    backgroundColor: "rgba(76,201,240,0.2)",
+    borderWidth: 1,
+  },
+  toggleText: {
+    fontSize: 12,
+  },
+  toggleTextActive: {
+    fontWeight: "600",
+  },
+  empty: {
+    fontSize: 13,
+  },
+});
