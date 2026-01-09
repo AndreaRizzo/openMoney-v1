@@ -36,6 +36,7 @@ export default function SettingsScreen(): JSX.Element {
     LIQUIDITY: false,
     INVEST: false,
   });
+  const [expandedWalletId, setExpandedWalletId] = useState<number | null>(null);
 
   const [prefillSnapshot, setPrefillSnapshot] = useState(true);
   const [chartMonths, setChartMonths] = useState(6);
@@ -347,6 +348,8 @@ export default function SettingsScreen(): JSX.Element {
                     style={{ marginTop: 8, backgroundColor: tokens.colors.surface2 }}
                     titleStyle={{ color: tokens.colors.text }}
                     descriptionStyle={{ color: tokens.colors.muted }}
+                    expanded={expandedWalletId === wallet.id}
+                    onPress={() => setExpandedWalletId((prev) => (prev === wallet.id ? null : wallet.id))}
                   >
                     <View style={styles.sectionContent}>
                       <TextInput
@@ -391,6 +394,7 @@ export default function SettingsScreen(): JSX.Element {
                               wallet.active
                             );
                             await load();
+                            setExpandedWalletId(null);
                           }}
                         >
                           Salva
@@ -404,6 +408,7 @@ export default function SettingsScreen(): JSX.Element {
                           onPress={async () => {
                             await deleteWallet(wallet.id);
                             await load();
+                            setExpandedWalletId(null);
                           }}
                         >
                           Elimina
@@ -475,6 +480,8 @@ export default function SettingsScreen(): JSX.Element {
                     style={{ marginTop: 8, backgroundColor: tokens.colors.surface2 }}
                     titleStyle={{ color: tokens.colors.text }}
                     descriptionStyle={{ color: tokens.colors.muted }}
+                    expanded={expandedWalletId === wallet.id}
+                    onPress={() => setExpandedWalletId((prev) => (prev === wallet.id ? null : wallet.id))}
                   >
                     <View style={styles.sectionContent}>
                       <TextInput
@@ -530,6 +537,7 @@ export default function SettingsScreen(): JSX.Element {
                               wallet.active
                             );
                             await load();
+                            setExpandedWalletId(null);
                           }}
                         >
                           Salva
@@ -543,6 +551,7 @@ export default function SettingsScreen(): JSX.Element {
                           onPress={async () => {
                             await deleteWallet(wallet.id);
                             await load();
+                            setExpandedWalletId(null);
                           }}
                         >
                           Elimina

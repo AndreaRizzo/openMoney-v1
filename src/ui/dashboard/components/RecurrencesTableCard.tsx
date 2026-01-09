@@ -24,30 +24,30 @@ export default function RecurrencesTableCard({ rows, onPressRow }: Props): JSX.E
       ) : (
         <View style={styles.table}>
           <View style={styles.headerRow}>
-            <Text style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellDate]}>Data</Text>
-            <Text style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellType]}>Tipo</Text>
-            <Text style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellCategory]}>Categoria</Text>
-            <Text style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellDesc]}>Descrizione</Text>
-            <Text style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellAmount]}>Importo</Text>
+            <Text style={[styles.headerCell, { color: tokens.colors.muted }]}>Data</Text>
+            <Text style={[styles.headerCell, { color: tokens.colors.muted }]}>Tipo</Text>
+            <Text style={[styles.headerCell, { color: tokens.colors.muted }]}>Categoria</Text>
+            <Text style={[styles.headerCell, { color: tokens.colors.muted }]}>Descrizione</Text>
+            <Text style={[styles.headerCell, { color: tokens.colors.muted }]}>Importo</Text>
           </View>
           {rows.map((item, index) => {
             const amountColor = item.type === "income" ? tokens.colors.green : tokens.colors.red;
             return (
               <React.Fragment key={item.id}>
                 <PressScale onPress={() => onPressRow?.(item)} style={styles.row}>
-                  <Text style={[styles.cell, { color: tokens.colors.text }, styles.cellDate]}>{formatShortDate(item.date)}</Text>
-                  <View style={[styles.cell, styles.cellType]}>
+                  <View style={styles.rowTop}>
+                    <Text style={[styles.date, { color: tokens.colors.text }]}>{formatShortDate(item.date)}</Text>
+                    <Text style={[styles.amount, { color: amountColor }]}>{formatEUR(item.amount)}</Text>
+                  </View>
+                  <View style={styles.rowChips}>
                     <Chip label={item.type === "income" ? "Entrata" : "Uscita"} tone={item.type === "income" ? "green" : "red"} />
                     {item.recurring ? <Chip label="Ric." tone="blue" /> : null}
                   </View>
-                  <Text style={[styles.cell, { color: tokens.colors.text }, styles.cellCategory]} numberOfLines={1}>
+                  <Text style={[styles.category, { color: tokens.colors.text }]} numberOfLines={1}>
                     {item.category}
                   </Text>
-                  <Text style={[styles.cell, { color: tokens.colors.text }, styles.cellDesc]} numberOfLines={1}>
+                  <Text style={[styles.description, { color: tokens.colors.muted }]} numberOfLines={2}>
                     {item.description}
-                  </Text>
-                  <Text style={[styles.cell, styles.cellAmount, { color: amountColor }]}>
-                    {formatEUR(item.amount)}
                   </Text>
                 </PressScale>
                 {index < rows.length - 1 ? (
@@ -69,39 +69,39 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: "row",
     paddingBottom: 8,
+    gap: 12,
   },
   headerCell: {
     fontSize: 12,
     fontWeight: "600",
   },
   row: {
-    flexDirection: "row",
-    alignItems: "center",
     paddingVertical: 8,
-  },
-  cell: {
-    fontSize: 12,
-  },
-  cellDate: {
-    width: 62,
-  },
-  cellType: {
-    width: 120,
-    flexDirection: "row",
     gap: 6,
   },
-  cellCategory: {
-    flex: 1,
-    marginRight: 6,
+  rowTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
-  cellDesc: {
-    flex: 1,
-    marginRight: 6,
+  rowChips: {
+    flexDirection: "row",
+    gap: 8,
   },
-  cellAmount: {
-    width: 88,
-    textAlign: "right",
+  date: {
+    fontSize: 12,
     fontWeight: "600",
+  },
+  amount: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  category: {
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  description: {
+    fontSize: 12,
   },
   separator: {
     height: 1,

@@ -54,6 +54,7 @@ export default function EntriesScreen(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [expandedCategoryId, setExpandedCategoryId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     const [income, expense, cats] = await Promise.all([
@@ -377,6 +378,8 @@ export default function EntriesScreen(): JSX.Element {
                   style={{ marginTop: 8, backgroundColor: tokens.colors.surface2 }}
                   titleStyle={{ color: tokens.colors.text }}
                   descriptionStyle={{ color: tokens.colors.muted }}
+                  expanded={expandedCategoryId === cat.id}
+                  onPress={() => setExpandedCategoryId((prev) => (prev === cat.id ? null : cat.id))}
                 >
                   <View style={styles.form}>
                     <TextInput
@@ -395,7 +398,14 @@ export default function EntriesScreen(): JSX.Element {
                       }
                     />
                     <View style={styles.actionsRow}>
-                      <Button mode="contained" buttonColor={tokens.colors.accent} onPress={() => saveCategory(cat.id)}>
+                      <Button
+                        mode="contained"
+                        buttonColor={tokens.colors.accent}
+                        onPress={async () => {
+                          await saveCategory(cat.id);
+                          setExpandedCategoryId(null);
+                        }}
+                      >
                         Salva
                       </Button>
                       <Button
@@ -404,11 +414,19 @@ export default function EntriesScreen(): JSX.Element {
                         onPress={async () => {
                           await setExpenseCategoryActive(cat.id, cat.active === 1 ? 0 : 1);
                           await load();
+                          setExpandedCategoryId(null);
                         }}
                       >
                         {cat.active === 1 ? "Disattiva" : "Attiva"}
                       </Button>
-                      <Button mode="outlined" textColor={tokens.colors.red} onPress={() => removeCategory(cat.id)}>
+                      <Button
+                        mode="outlined"
+                        textColor={tokens.colors.red}
+                        onPress={async () => {
+                          await removeCategory(cat.id);
+                          setExpandedCategoryId(null);
+                        }}
+                      >
                         Elimina
                       </Button>
                     </View>
