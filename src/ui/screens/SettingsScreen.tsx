@@ -11,21 +11,59 @@ import { exportToFile, exportToJson, importFromFile, importFromJson } from "@/im
 import { runMigrations } from "@/db/db";
 import PremiumCard from "@/ui/dashboard/components/PremiumCard";
 import SectionHeader from "@/ui/dashboard/components/SectionHeader";
+import PressScale from "@/ui/dashboard/components/PressScale";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useHeaderHeight } from "@react-navigation/elements";
 import { createWallet, deleteWallet, ensureDefaultWallets, listWallets, updateWallet } from "@/repositories/walletsRepo";
+import {
+  listExpenseCategories,
+  createExpenseCategory,
+  updateExpenseCategory,
+  deleteExpenseCategory,
+} from "@/repositories/expenseCategoriesRepo";
 import { getPreference, setPreference } from "@/repositories/preferencesRepo";
 import { withTransaction } from "@/db/db";
 import { ThemeContext } from "@/ui/theme";
-import type { Wallet, Currency } from "@/repositories/types";
+import type { Wallet, Currency, ExpenseCategory } from "@/repositories/types";
+
+type CategoryEdit = {
+  name: string;
+  color: string;
+};
+
+const presetColors = [
+  "#9B7BFF",
+  "#5C9DFF",
+  "#F6C177",
+  "#66D19E",
+  "#C084FC",
+  "#FF8FAB",
+  "#6EE7B7",
+  "#94A3B8",
+  "#F97316",
+  "#22D3EE",
+];
+
+function nextPresetColor(current: string): string {
+  const index = presetColors.indexOf(current);
+  if (index === -1) return presetColors[0];
+  return presetColors[(index + 1) % presetColors.length];
+}
 
 export default function SettingsScreen(): JSX.Element {
   const { tokens } = useDashboardTheme();
   const navigation = useNavigation<{ navigate: (name: string) => void }>();
   const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
   const [message, setMessage] = useState<string | null>(null);
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [walletEdits, setWalletEdits] = useState<Record<number, { name: string; tag: string; currency: Currency }>>({});
+  const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+  const [categoryEdits, setCategoryEdits] = useState<Record<number, CategoryEdit>>({});
+  const [newCategory, setNewCategory] = useState("");
+  const [newCategoryColor, setNewCategoryColor] = useState(presetColors[0]);
+  const [expandedCategoryId, setExpandedCategoryId] = useState<number | null>(null);
   const [tab, setTab] = useState<"LIQUIDITY" | "INVEST">("LIQUIDITY");
   const [newWalletDraft, setNewWalletDraft] = useState<{ name: string; tag: string; currency: Currency }>({
     name: "",
@@ -44,8 +82,9 @@ export default function SettingsScreen(): JSX.Element {
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
-    const [walletList] = await Promise.all([listWallets()]);
+    const [walletList, expenseCats] = await Promise.all([listWallets(), listExpenseCategories()]);
     setWallets(walletList);
+    setCategories(expenseCats);
     const edits: Record<number, { name: string; tag: string; currency: Currency }> = {};
     walletList.forEach((wallet) => {
       edits[wallet.id] = {
@@ -55,6 +94,12 @@ export default function SettingsScreen(): JSX.Element {
       };
     });
     setWalletEdits(edits);
+
+    const categoryEditsMap: Record<number, CategoryEdit> = {};
+    expenseCats.forEach((cat) => {
+      categoryEditsMap[cat.id] = { name: cat.name, color: cat.color };
+    });
+    setCategoryEdits(categoryEditsMap);
 
     const prefill = await getPreference("prefill_snapshot");
     const points = await getPreference("chart_points");
@@ -76,7 +121,7 @@ export default function SettingsScreen(): JSX.Element {
 
   const exportData = async () => {
     setMessage(null);
-    const fileName = "mymoney-export.json";
+    const fileName = "openMoney-export.json";
     try {
       const payload = await exportToJson();
       const json = JSON.stringify(payload, null, 2);
@@ -236,15 +281,24 @@ export default function SettingsScreen(): JSX.Element {
     await load();
   };
 
-  const toggleWalletActive = async (wallet: Wallet) => {
-    await updateWallet(
-      wallet.id,
-      wallet.name,
-      wallet.type,
-      wallet.currency,
-      wallet.tag,
-      wallet.active === 1 ? 0 : 1
-    );
+  const addCategory = async () => {
+    if (!newCategory.trim()) return;
+    await createExpenseCategory(newCategory.trim(), newCategoryColor);
+    setNewCategory("");
+    setNewCategoryColor(presetColors[0]);
+    await load();
+  };
+
+  const saveCategory = async (id: number) => {
+    const edit = categoryEdits[id];
+    const name = edit?.name?.trim();
+    if (!name || !edit?.color) return;
+    await updateExpenseCategory(id, name, edit.color);
+    await load();
+  };
+
+  const removeCategory = async (id: number) => {
+    await deleteExpenseCategory(id);
     await load();
   };
 
@@ -275,7 +329,7 @@ export default function SettingsScreen(): JSX.Element {
       <ScrollView
         contentContainerStyle={[
           styles.container,
-          { gap: tokens.spacing.md, paddingBottom: 160 + insets.bottom },
+          { gap: tokens.spacing.md, paddingBottom: 160 + insets.bottom, paddingTop: headerHeight + 12 },
         ]}
         alwaysBounceVertical
         bounces
@@ -341,9 +395,7 @@ export default function SettingsScreen(): JSX.Element {
                   <List.Accordion
                     key={wallet.id}
                     title={walletEdits[wallet.id]?.name ?? wallet.name}
-                    description={`${walletEdits[wallet.id]?.currency ?? wallet.currency}${
-                      wallet.active === 0 ? " • disattivo" : ""
-                    }`}
+                    description={`${walletEdits[wallet.id]?.currency ?? wallet.currency}`}
                     left={(props) => <List.Icon {...props} icon="wallet" />}
                     style={{ marginTop: 8, backgroundColor: tokens.colors.surface2 }}
                     titleStyle={{ color: tokens.colors.text }}
@@ -398,9 +450,6 @@ export default function SettingsScreen(): JSX.Element {
                           }}
                         >
                           Salva
-                        </Button>
-                        <Button mode="outlined" textColor={tokens.colors.text} onPress={() => toggleWalletActive(wallet)}>
-                          {wallet.active === 1 ? "Disattiva" : "Attiva"}
                         </Button>
                         <Button
                           mode="outlined"
@@ -475,7 +524,7 @@ export default function SettingsScreen(): JSX.Element {
                     title={walletEdits[wallet.id]?.name ?? wallet.name}
                     description={`${walletEdits[wallet.id]?.currency ?? wallet.currency}${
                       walletEdits[wallet.id]?.tag || wallet.tag ? ` • ${walletEdits[wallet.id]?.tag ?? wallet.tag}` : ""
-                    }${wallet.active === 0 ? " • disattivo" : ""}`}
+                    }`}
                     left={(props) => <List.Icon {...props} icon="wallet" />}
                     style={{ marginTop: 8, backgroundColor: tokens.colors.surface2 }}
                     titleStyle={{ color: tokens.colors.text }}
@@ -542,9 +591,6 @@ export default function SettingsScreen(): JSX.Element {
                         >
                           Salva
                         </Button>
-                        <Button mode="outlined" textColor={tokens.colors.text} onPress={() => toggleWalletActive(wallet)}>
-                          {wallet.active === 1 ? "Disattiva" : "Attiva"}
-                        </Button>
                         <Button
                           mode="outlined"
                           textColor={tokens.colors.red}
@@ -562,6 +608,110 @@ export default function SettingsScreen(): JSX.Element {
                 ))}
               </>
             )}
+          </View>
+        </PremiumCard>
+
+        <PremiumCard>
+          <SectionHeader title="Categorie spesa" />
+          <View style={styles.sectionContent}>
+            <View style={styles.colorLine}>
+              <TextInput
+                label="Nuova categoria"
+                value={newCategory}
+                {...inputProps}
+                style={[styles.categoryNameInput, inputProps.style]}
+                onChangeText={setNewCategory}
+              />
+              <PressScale
+                onPress={() => setNewCategoryColor((prev) => nextPresetColor(prev))}
+                style={[
+                  styles.colorSwatch,
+                  { backgroundColor: newCategoryColor, borderColor: tokens.colors.text },
+                ]}
+              />
+            </View>
+            <Button mode="contained" buttonColor={tokens.colors.accent} onPress={addCategory}>
+              Aggiungi
+            </Button>
+            {categories.length === 0 ? (
+              <Text style={{ color: tokens.colors.muted }}>Nessuna categoria configurata.</Text>
+            ) : null}
+            {categories.map((cat) => (
+              <List.Accordion
+                key={cat.id}
+                title={categoryEdits[cat.id]?.name ?? cat.name}
+                description="Attiva"
+                left={(props) => <List.Icon {...props} icon="tag" />}
+                style={{ marginTop: 8, backgroundColor: tokens.colors.surface2 }}
+                titleStyle={{ color: tokens.colors.text }}
+                descriptionStyle={{ color: tokens.colors.muted }}
+                expanded={expandedCategoryId === cat.id}
+                onPress={() => setExpandedCategoryId((prev) => (prev === cat.id ? null : cat.id))}
+              >
+                <View style={styles.sectionContent}>
+                  <View style={styles.colorLine}>
+                    <TextInput
+                      label="Nome categoria"
+                      value={categoryEdits[cat.id]?.name ?? cat.name}
+                      {...inputProps}
+                      style={[styles.categoryNameInput, { backgroundColor: tokens.colors.surface }]}
+                      onChangeText={(value) =>
+                        setCategoryEdits((prev) => ({
+                          ...prev,
+                          [cat.id]: {
+                            name: value,
+                            color: prev[cat.id]?.color ?? cat.color,
+                          },
+                        }))
+                      }
+                    />
+                    <PressScale
+                      onPress={() =>
+                        setCategoryEdits((prev) => {
+                          const current = prev[cat.id]?.color ?? cat.color;
+                          return {
+                            ...prev,
+                            [cat.id]: {
+                              name: prev[cat.id]?.name ?? cat.name,
+                              color: nextPresetColor(current),
+                            },
+                          };
+                        })
+                      }
+                      style={[
+                        styles.colorSwatch,
+                        {
+                          backgroundColor: categoryEdits[cat.id]?.color ?? cat.color,
+                          borderColor: tokens.colors.text,
+                        },
+                      ]}
+                    />
+                  </View>
+                  <View style={styles.actionsRow}>
+                    <Button
+                      mode="contained"
+                      buttonColor={tokens.colors.accent}
+                      onPress={async () => {
+                        await saveCategory(cat.id);
+                        setExpandedCategoryId(null);
+                      }}
+                    >
+                      Salva
+                    </Button>
+                    <Button
+                      mode="outlined"
+                      textColor={tokens.colors.red}
+                      onPress={async () => {
+                        await removeCategory(cat.id);
+                        setExpandedCategoryId(null);
+                      }}
+                    >
+                      Elimina
+                    </Button>
+                  </View>
+                </View>
+              </List.Accordion>
+            ))}
           </View>
         </PremiumCard>
 
@@ -668,5 +818,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+  },
+  colorLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  categoryNameInput: {
+    flex: 1,
+    minWidth: 160,
+  },
+  colorSwatch: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    borderWidth: 2,
   },
 });

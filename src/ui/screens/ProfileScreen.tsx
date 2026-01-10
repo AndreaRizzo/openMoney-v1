@@ -6,6 +6,7 @@ import PremiumCard from "@/ui/dashboard/components/PremiumCard";
 import SectionHeader from "@/ui/dashboard/components/SectionHeader";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useHeaderHeight } from "@react-navigation/elements";
 
 type ProfileState = {
   name: string;
@@ -24,6 +25,7 @@ const emptyProfile: ProfileState = {
 export default function ProfileScreen(): JSX.Element {
   const { tokens } = useDashboardTheme();
   const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
   const [form, setForm] = useState<ProfileState>(emptyProfile);
   const [message, setMessage] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -81,7 +83,7 @@ export default function ProfileScreen(): JSX.Element {
       <ScrollView
         contentContainerStyle={[
           styles.container,
-          { gap: tokens.spacing.md, paddingBottom: 160 + insets.bottom },
+          { gap: tokens.spacing.md, paddingBottom: 160 + insets.bottom, paddingTop: headerHeight + 12 },
         ]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tokens.colors.accent} />}
       >

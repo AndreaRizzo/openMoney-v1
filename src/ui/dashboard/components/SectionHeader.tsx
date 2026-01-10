@@ -25,7 +25,7 @@ export default function SectionHeader({ title, subtitle, trailing }: Props): JSX
 const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
-    alignItems: "flex-end",
+    alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 12,
   },

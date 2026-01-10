@@ -41,23 +41,27 @@ export function averageMonthlyTotals(
   month: number,
   months: number
 ): MonthlyTotals {
-  let income = 0;
-  let expense = 0;
-  let cursorYear = year;
-  let cursorMonth = month;
-  for (let i = 0; i < months; i += 1) {
-    const totals = totalsForMonth(incomes, expenses, cursorYear, cursorMonth);
-    income += totals.income;
-    expense += totals.expense;
-    cursorMonth -= 1;
-    if (cursorMonth <= 0) {
-      cursorMonth = 12;
-      cursorYear -= 1;
+  const annualize = (entry: IncomeEntry | ExpenseEntry): number => {
+    const interval = entry.recurrence_interval && entry.recurrence_interval > 0 ? entry.recurrence_interval : 1;
+    if (!entry.recurrence_frequency || entry.one_shot === 1) {
+      return entry.amount;
     }
-  }
+    const perYear =
+      entry.recurrence_frequency === "WEEKLY"
+        ? 52 / interval
+        : entry.recurrence_frequency === "MONTHLY"
+          ? 12 / interval
+          : 1 / interval;
+    return entry.amount * perYear;
+  };
+
+  const annualIncome = incomes.reduce((sum, entry) => sum + annualize(entry), 0);
+  const annualExpense = expenses.reduce((sum, entry) => sum + annualize(entry), 0);
+  const avgIncome = annualIncome / 12;
+  const avgExpense = annualExpense / 12;
   return {
-    income: income / months,
-    expense: expense / months,
-    net: income / months - expense / months,
+    income: avgIncome,
+    expense: avgExpense,
+    net: avgIncome - avgExpense,
   };
 }

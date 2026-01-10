@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View, useWindowDimensions } from "react-native";
+import { ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
 import { Text } from "react-native-paper";
 import {
   VictoryAxis,
@@ -26,6 +26,9 @@ export default function CashflowOverviewCard({ cashflow }: Props): JSX.Element {
   const incomeData = cashflow.months.map((month) => ({ x: formatMonthLabel(month.month), y: month.income }));
   const expenseData = cashflow.months.map((month) => ({ x: formatMonthLabel(month.month), y: month.expense }));
   const savingsColor = cashflow.avgSavings >= 0 ? tokens.colors.green : tokens.colors.red;
+  const avgIncomeYear = cashflow.avgIncome * 12;
+  const avgExpenseYear = cashflow.avgExpense * 12;
+  const chartWidth = Math.max(width - 64, cashflow.months.length * 70);
   const tooltipFlyout = { fill: tokens.colors.surface2, stroke: tokens.colors.border };
   const tooltipText = { fill: tokens.colors.text, fontSize: 11 };
 
@@ -38,59 +41,75 @@ export default function CashflowOverviewCard({ cashflow }: Props): JSX.Element {
         <View style={[styles.layout, isCompact && styles.layoutStacked]}>
           <View style={styles.kpiCol}>
             <View style={styles.kpiRow}>
-              <Text style={[styles.kpiLabel, { color: tokens.colors.muted }]}>Entrate medie</Text>
+              <Text style={[styles.kpiLabel, { color: tokens.colors.muted }]}>Entrate medie mensili</Text>
               <Text style={[styles.kpiValue, { color: tokens.colors.text }]}>{formatEUR(cashflow.avgIncome)}</Text>
+              <Text style={[styles.kpiSubLabel, { color: tokens.colors.muted }]}>Annue</Text>
+              <Text style={[styles.kpiSubValue, { color: tokens.colors.text }]}>{formatEUR(avgIncomeYear)}</Text>
             </View>
             <View style={styles.kpiRow}>
-              <Text style={[styles.kpiLabel, { color: tokens.colors.muted }]}>Uscite medie</Text>
+              <Text style={[styles.kpiLabel, { color: tokens.colors.muted }]}>Uscite medie mensili</Text>
               <Text style={[styles.kpiValue, { color: tokens.colors.text }]}>{formatEUR(cashflow.avgExpense)}</Text>
+              <Text style={[styles.kpiSubLabel, { color: tokens.colors.muted }]}>Annue</Text>
+              <Text style={[styles.kpiSubValue, { color: tokens.colors.text }]}>{formatEUR(avgExpenseYear)}</Text>
             </View>
             <View style={styles.kpiRow}>
-              <Text style={[styles.kpiLabel, { color: tokens.colors.muted }]}>Risparmio medio</Text>
+              <Text style={[styles.kpiLabel, { color: tokens.colors.muted }]}>Risparmio medio mensile</Text>
               <Text style={[styles.kpiValue, { color: savingsColor }]}>{formatEUR(cashflow.avgSavings)}</Text>
             </View>
-            <Text style={[styles.legendHint, { color: tokens.colors.muted }]}>Entrate vs Uscite</Text>
           </View>
           <View style={[styles.chartCol, isCompact && styles.chartColStacked]}>
-            <VictoryChart
-              height={200}
-              domainPadding={{ x: 18, y: 14 }}
-              padding={{ left: 40, right: 10, top: 10, bottom: 30 }}
-              containerComponent={
-                <VictoryVoronoiContainer
-                labels={({ datum }) => `${datum.x} • ${formatEUR(datum.y)}`}
-                  labelComponent={
-                    <VictoryTooltip
-                      flyoutStyle={tooltipFlyout}
-                      style={tooltipText}
-                      cornerRadius={10}
-                      pointerLength={6}
-                    />
-                  }
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chartScroll}>
+              <VictoryChart
+                width={chartWidth}
+                height={200}
+                domainPadding={{ x: 18, y: 14 }}
+                padding={{ left: 40, right: 42, top: 10, bottom: 30 }}
+                containerComponent={
+                  <VictoryVoronoiContainer
+                    labels={({ datum }) => `${datum.x} • ${formatEUR(datum.y)}`}
+                    labelComponent={
+                      <VictoryTooltip
+                        flyoutStyle={tooltipFlyout}
+                        style={tooltipText}
+                        cornerRadius={10}
+                        pointerLength={6}
+                      />
+                    }
+                  />
+                }
+              >
+                <VictoryAxis
+                  tickFormat={(tick) => String(tick)}
+                  style={{
+                    axis: { stroke: "transparent" },
+                    tickLabels: { fontSize: 10, fill: tokens.colors.muted, padding: 6 },
+                  }}
                 />
-              }
-            >
-              <VictoryAxis
-                tickFormat={(tick) => String(tick)}
-                style={{
-                  axis: { stroke: "transparent" },
-                  tickLabels: { fontSize: 10, fill: tokens.colors.muted, padding: 6 },
-                }}
-              />
-              <VictoryAxis
-                dependentAxis
-                tickFormat={(tick) => formatCompact(Number(tick))}
-                style={{
-                  axis: { stroke: "transparent" },
-                  grid: { stroke: tokens.colors.border },
-                  tickLabels: { fontSize: 10, fill: tokens.colors.muted, padding: 6 },
-                }}
-              />
-              <VictoryGroup offset={12}>
-                <VictoryBar data={incomeData} cornerRadius={4} style={{ data: { fill: tokens.colors.green, opacity: 0.85 } }} />
-                <VictoryBar data={expenseData} cornerRadius={4} style={{ data: { fill: tokens.colors.red, opacity: 0.85 } }} />
-              </VictoryGroup>
-            </VictoryChart>
+                <VictoryAxis
+                  dependentAxis
+                  tickFormat={(tick) => formatCompact(Number(tick))}
+                  style={{
+                    axis: { stroke: "transparent" },
+                    grid: { stroke: tokens.colors.border },
+                    tickLabels: { fontSize: 10, fill: tokens.colors.muted, padding: 6 },
+                  }}
+                />
+                <VictoryAxis
+                  dependentAxis
+                  orientation="right"
+                  tickFormat={(tick) => formatCompact(Number(tick))}
+                  style={{
+                    axis: { stroke: "transparent" },
+                    grid: { stroke: "transparent" },
+                    tickLabels: { fontSize: 10, fill: tokens.colors.muted, padding: 6 },
+                  }}
+                />
+                <VictoryGroup offset={12}>
+                  <VictoryBar data={incomeData} cornerRadius={4} style={{ data: { fill: tokens.colors.green, opacity: 0.85 } }} />
+                  <VictoryBar data={expenseData} cornerRadius={4} style={{ data: { fill: tokens.colors.red, opacity: 0.85 } }} />
+                </VictoryGroup>
+              </VictoryChart>
+            </ScrollView>
           </View>
         </View>
       )}
@@ -126,9 +145,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
   },
-  legendHint: {
+  kpiSubLabel: {
     fontSize: 12,
     marginTop: 6,
+  },
+  kpiSubValue: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  chartScroll: {
+    paddingRight: 28,
   },
   empty: {},
 });

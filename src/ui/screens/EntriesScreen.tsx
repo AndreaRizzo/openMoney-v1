@@ -1,17 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Platform, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
-import { Button, List, SegmentedButtons, Switch, Text, TextInput } from "react-native-paper";
+import { Button, SegmentedButtons, Switch, Text, TextInput } from "react-native-paper";
 import { useRoute } from "@react-navigation/native";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { listIncomeEntries, createIncomeEntry, updateIncomeEntry, deleteIncomeEntry } from "@/repositories/incomeEntriesRepo";
 import { listExpenseEntries, createExpenseEntry, updateExpenseEntry, deleteExpenseEntry } from "@/repositories/expenseEntriesRepo";
-import {
-  listExpenseCategories,
-  createExpenseCategory,
-  updateExpenseCategory,
-  deleteExpenseCategory,
-  setExpenseCategoryActive,
-} from "@/repositories/expenseCategoriesRepo";
+import { listExpenseCategories } from "@/repositories/expenseCategoriesRepo";
 import type { ExpenseCategory, ExpenseEntry, IncomeEntry, RecurrenceFrequency } from "@/repositories/types";
 import { isIsoDate, todayIso } from "@/utils/dates";
 import PremiumCard from "@/ui/dashboard/components/PremiumCard";
@@ -21,13 +16,10 @@ import Chip from "@/ui/dashboard/components/Chip";
 import { formatEUR, formatShortDate } from "@/ui/dashboard/formatters";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useHeaderHeight } from "@react-navigation/elements";
 
 type Mode = "income" | "expense";
 
-type CategoryEdit = {
-  name: string;
-  color: string;
-};
 
 type FormState = {
   id: number | null;
@@ -53,28 +45,10 @@ const emptyForm: FormState = {
   interval: "1",
 };
 
-const presetColors = [
-  "#9B7BFF",
-  "#5C9DFF",
-  "#F6C177",
-  "#66D19E",
-  "#C084FC",
-  "#FF8FAB",
-  "#6EE7B7",
-  "#94A3B8",
-  "#F97316",
-  "#22D3EE",
-];
-
-function nextPresetColor(current: string): string {
-  const index = presetColors.indexOf(current);
-  if (index === -1) return presetColors[0];
-  return presetColors[(index + 1) % presetColors.length];
-}
-
 export default function EntriesScreen(): JSX.Element {
   const { tokens } = useDashboardTheme();
   const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
   const route = useRoute();
   const scrollRef = useRef<ScrollView | null>(null);
   const routeMode = (route.params as { mode?: Mode; entryId?: number } | undefined)?.mode;
@@ -83,14 +57,10 @@ export default function EntriesScreen(): JSX.Element {
   const [incomeEntries, setIncomeEntries] = useState<IncomeEntry[]>([]);
   const [expenseEntries, setExpenseEntries] = useState<ExpenseEntry[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
-  const [categoryEdits, setCategoryEdits] = useState<Record<number, CategoryEdit>>({});
-  const [newCategory, setNewCategory] = useState("");
-  const [newCategoryColor, setNewCategoryColor] = useState(presetColors[0]);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [error, setError] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [expandedCategoryId, setExpandedCategoryId] = useState<number | null>(null);
   const [showNewEntry, setShowNewEntry] = useState(false);
 
   const load = useCallback(async () => {
@@ -102,11 +72,6 @@ export default function EntriesScreen(): JSX.Element {
     setIncomeEntries(income);
     setExpenseEntries(expense);
     setCategories(cats);
-    const edits: Record<number, CategoryEdit> = {};
-    cats.forEach((cat) => {
-      edits[cat.id] = { name: cat.name, color: cat.color };
-    });
-    setCategoryEdits(edits);
   }, []);
 
   useEffect(() => {
@@ -230,28 +195,8 @@ export default function EntriesScreen(): JSX.Element {
     await load();
   };
 
-  const addCategory = async () => {
-    if (!newCategory.trim()) return;
-    await createExpenseCategory(newCategory.trim(), newCategoryColor);
-    setNewCategory("");
-    setNewCategoryColor(presetColors[0]);
-    await load();
-  };
-
-  const saveCategory = async (id: number) => {
-    const edit = categoryEdits[id];
-    const name = edit?.name?.trim();
-    if (!name || !edit?.color) return;
-    await updateExpenseCategory(id, name, edit.color);
-    await load();
-  };
-
-  const removeCategory = async (id: number) => {
-    await deleteExpenseCategory(id);
-    await load();
-  };
-
   const entries = mode === "income" ? incomeEntries : expenseEntries;
+  const addEntryLabel = mode === "income" ? "Aggiungi una nuova entrata" : "Aggiungi una nuova uscita";
 
   const activeCategories = useMemo(() => categories.filter((cat) => cat.active === 1), [categories]);
   const categoryById = useMemo(() => {
@@ -281,13 +226,18 @@ export default function EntriesScreen(): JSX.Element {
     return entry.amount * periods;
   };
 
+  const sortedEntries = useMemo(() => {
+    const getAnnualForSort = (entry: IncomeEntry | ExpenseEntry) => toAnnualAmount(entry) ?? 0;
+    return [...entries].sort((a, b) => getAnnualForSort(b) - getAnnualForSort(a));
+  }, [entries]);
+
   return (
     <View style={[styles.screen, { backgroundColor: tokens.colors.bg }]}>
       <ScrollView
         ref={scrollRef}
         contentContainerStyle={[
           styles.container,
-          { gap: tokens.spacing.md, paddingBottom: 160 + insets.bottom },
+          { gap: tokens.spacing.md, paddingBottom: 160 + insets.bottom, paddingTop: headerHeight + 12 },
         ]}
         alwaysBounceVertical
         bounces
@@ -308,15 +258,17 @@ export default function EntriesScreen(): JSX.Element {
 
         <PremiumCard>
           <SectionHeader
-            title="Aggiungi nuova"
+            title={addEntryLabel}
             trailing={
               <Button
                 mode="contained"
                 buttonColor={tokens.colors.accent}
-                textColor={tokens.colors.text}
+                style={styles.addButton}
+                contentStyle={styles.addButtonContent}
+                labelStyle={styles.addButtonLabel}
                 onPress={() => setShowNewEntry((prev) => !prev)}
               >
-                {showNewEntry ? "Chiudi" : "Aggiungi"}
+                <MaterialCommunityIcons name="plus" size={22} color="#FFFFFF" />
               </Button>
             }
           />
@@ -447,126 +399,6 @@ export default function EntriesScreen(): JSX.Element {
           ) : null}
         </PremiumCard>
 
-        {mode === "expense" && (
-          <PremiumCard>
-            <SectionHeader title="Categorie spesa" />
-            <View style={styles.form}>
-              <View style={styles.colorLine}>
-                <TextInput
-                  label="Nuova categoria"
-                  value={newCategory}
-                  mode="outlined"
-                  outlineColor={tokens.colors.border}
-                  activeOutlineColor={tokens.colors.accent}
-                  textColor={tokens.colors.text}
-                  style={[styles.colorInput, { backgroundColor: tokens.colors.surface2 }]}
-                  onChangeText={setNewCategory}
-                />
-                <PressScale
-                  onPress={() => setNewCategoryColor((prev) => nextPresetColor(prev))}
-                  style={[
-                    styles.colorSwatch,
-                    { backgroundColor: newCategoryColor, borderColor: tokens.colors.text },
-                  ]}
-                />
-              </View>
-              <Button mode="contained" buttonColor={tokens.colors.accent} onPress={addCategory}>
-                Aggiungi
-              </Button>
-              {categories.map((cat) => (
-                <List.Accordion
-                  key={cat.id}
-                  title={categoryEdits[cat.id]?.name ?? cat.name}
-                  description={cat.active === 1 ? "Attiva" : "Disattiva"}
-                  left={(props) => <List.Icon {...props} icon="tag" />}
-                  style={{ marginTop: 8, backgroundColor: tokens.colors.surface2 }}
-                  titleStyle={{ color: tokens.colors.text }}
-                  descriptionStyle={{ color: tokens.colors.muted }}
-                  expanded={expandedCategoryId === cat.id}
-                  onPress={() => setExpandedCategoryId((prev) => (prev === cat.id ? null : cat.id))}
-                >
-                  <View style={styles.form}>
-                    <View style={styles.colorLine}>
-                      <TextInput
-                        label="Nome categoria"
-                        value={categoryEdits[cat.id]?.name ?? cat.name}
-                        mode="outlined"
-                        outlineColor={tokens.colors.border}
-                        activeOutlineColor={tokens.colors.accent}
-                        textColor={tokens.colors.text}
-                        style={[styles.colorInput, { backgroundColor: tokens.colors.surface }]}
-                        onChangeText={(value) =>
-                          setCategoryEdits((prev) => ({
-                            ...prev,
-                            [cat.id]: {
-                              name: value,
-                              color: prev[cat.id]?.color ?? cat.color,
-                            },
-                          }))
-                        }
-                      />
-                      <PressScale
-                        onPress={() =>
-                          setCategoryEdits((prev) => {
-                            const current = prev[cat.id]?.color ?? cat.color;
-                            return {
-                              ...prev,
-                              [cat.id]: {
-                                name: prev[cat.id]?.name ?? cat.name,
-                                color: nextPresetColor(current),
-                              },
-                            };
-                          })
-                        }
-                        style={[
-                          styles.colorSwatch,
-                          {
-                            backgroundColor: categoryEdits[cat.id]?.color ?? cat.color,
-                            borderColor: tokens.colors.text,
-                          },
-                        ]}
-                      />
-                    </View>
-                    <View style={styles.actionsRow}>
-                      <Button
-                        mode="contained"
-                        buttonColor={tokens.colors.accent}
-                        onPress={async () => {
-                          await saveCategory(cat.id);
-                          setExpandedCategoryId(null);
-                        }}
-                      >
-                        Salva
-                      </Button>
-                      <Button
-                        mode="outlined"
-                        textColor={tokens.colors.text}
-                        onPress={async () => {
-                          await setExpenseCategoryActive(cat.id, cat.active === 1 ? 0 : 1);
-                          await load();
-                          setExpandedCategoryId(null);
-                        }}
-                      >
-                        {cat.active === 1 ? "Disattiva" : "Attiva"}
-                      </Button>
-                      <Button
-                        mode="outlined"
-                        textColor={tokens.colors.red}
-                        onPress={async () => {
-                          await removeCategory(cat.id);
-                          setExpandedCategoryId(null);
-                        }}
-                      >
-                        Elimina
-                      </Button>
-                    </View>
-                  </View>
-                </List.Accordion>
-              ))}
-            </View>
-          </PremiumCard>
-        )}
-
         <PremiumCard>
           <SectionHeader title="Lista" />
           {entries.length === 0 ? (
@@ -594,7 +426,7 @@ export default function EntriesScreen(): JSX.Element {
                     Modifica
                   </Text>
                 </View>
-                {entries.map((entry, index) => {
+                {sortedEntries.map((entry, index) => {
                   const annualAmount = toAnnualAmount(entry);
                   const category =
                     "expense_category_id" in entry
@@ -674,6 +506,20 @@ const styles = StyleSheet.create({
     marginTop: 12,
     flexWrap: "wrap",
   },
+  addButton: {
+    borderRadius: 12,
+    minWidth: 44,
+  },
+  addButtonContent: {
+    height: 44,
+    width: 44,
+    paddingHorizontal: 0,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addButtonLabel: {
+    marginVertical: 0,
+  },
   list: {
     gap: 8,
   },
@@ -746,19 +592,5 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 11,
     fontWeight: "700",
-  },
-  colorLine: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  colorInput: {
-    flex: 1,
-  },
-  colorSwatch: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    borderWidth: 2,
   },
 });

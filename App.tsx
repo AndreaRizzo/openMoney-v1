@@ -1,9 +1,11 @@
 import React from "react";
+import { StyleSheet } from "react-native";
 import { DarkTheme, DefaultTheme, NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MD3DarkTheme, MD3LightTheme, Provider as PaperProvider } from "react-native-paper";
 import { enableScreens } from "react-native-screens";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
 import { useAppBootstrap } from "@/app/useAppBootstrap";
 import DashboardScreen from "@/ui/screens/DashboardScreen";
 import EntriesScreen from "@/ui/screens/EntriesScreen";
@@ -42,6 +44,10 @@ export default function App(): JSX.Element {
           },
         };
   const navTheme = themeMode === "dark" ? DarkTheme : DefaultTheme;
+  const headerBlurTint = themeMode === "dark" ? "dark" : "light";
+  const headerOverlay =
+    themeMode === "dark" ? "rgba(15, 18, 30, 0.55)" : "rgba(169, 124, 255, 0.32)";
+  const headerBorder = themeMode === "dark" ? navTheme.colors.border : "rgba(169, 124, 255, 0.5)";
 
   return (
     <ThemeContext.Provider value={{ mode: themeMode, setMode: setThemeMode }}>
@@ -57,8 +63,18 @@ export default function App(): JSX.Element {
                 <Tab.Navigator
                   screenOptions={({ route }) => ({
                   headerTitleAlign: "center",
-                  headerStyle: { backgroundColor: navTheme.colors.background },
-                    tabBarStyle: { display: "none" },
+                  headerTransparent: true,
+                  headerBackground: () => (
+                    <BlurView
+                      intensity={35}
+                      tint={headerBlurTint}
+                      style={[
+                        StyleSheet.absoluteFill,
+                        { borderBottomWidth: 1, borderBottomColor: headerBorder, backgroundColor: headerOverlay },
+                      ]}
+                    />
+                  ),
+                  tabBarStyle: { display: "none" },
                   })}
                   tabBar={(props) => <GlassTabBar {...props} />}
                 >

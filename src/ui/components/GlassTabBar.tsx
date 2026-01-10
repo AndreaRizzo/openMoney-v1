@@ -16,9 +16,22 @@ const ICONS: Record<string, string> = {
 export default function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProps): JSX.Element {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const isDark = theme.dark;
+  const blurTint = isDark ? "dark" : "light";
+  const blurIntensity = isDark ? 40 : 55;
+  const barBg = isDark ? "rgba(15, 18, 30, 0.55)" : "rgba(169, 124, 255, 0.32)";
+  const borderColor = isDark ? theme.colors.outline : "rgba(169, 124, 255, 0.5)";
+  const inactiveColor = isDark ? theme.colors.onSurface : "#1E2430";
   return (
     <View style={styles.wrap} pointerEvents="box-none">
-      <BlurView intensity={35} tint="dark" style={[styles.bar, { borderColor: theme.colors.outline, paddingBottom: Math.max(8, insets.bottom) }]}>
+      <BlurView
+        intensity={blurIntensity}
+        tint={blurTint}
+        style={[
+          styles.bar,
+          { borderColor, paddingBottom: Math.max(8, insets.bottom), backgroundColor: barBg },
+        ]}
+      >
         <View style={styles.row}>
           {state.routes
             .filter((route) => route.name !== "Profilo")
@@ -44,11 +57,11 @@ export default function GlassTabBar({ state, descriptors, navigation }: BottomTa
                 <MaterialCommunityIcons
                   name={icon}
                   size={isFocused ? 24 : 22}
-                  color={isFocused ? theme.colors.primary : theme.colors.onSurface}
+                  color={isFocused ? theme.colors.primary : inactiveColor}
                 />
                 <Text
                   variant="labelSmall"
-                  style={{ color: isFocused ? theme.colors.primary : theme.colors.onSurface }}
+                  style={{ color: isFocused ? theme.colors.primary : inactiveColor }}
                 >
                   {String(label)}
                 </Text>

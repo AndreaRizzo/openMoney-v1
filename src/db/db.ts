@@ -6,7 +6,7 @@ let dbPromise: Promise<SQLiteDatabase> | null = null;
 
 async function getDb(): Promise<SQLiteDatabase> {
   if (!dbPromise) {
-    dbPromise = SQLite.openDatabaseAsync("mymoney.db").catch((error) => {
+    dbPromise = SQLite.openDatabaseAsync("openMoney.db").catch((error) => {
       dbPromise = null;
       throw error;
     });

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { ScrollView } from "react-native";
 import { Button, Card, Text, TextInput, SegmentedButtons } from "react-native-paper";
+import { useHeaderHeight } from "@react-navigation/elements";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system";
 import { exportToFile, importFromFile } from "@/importExport";
@@ -14,7 +15,8 @@ import type { Container, ContainerType, ExpenseCategory, Institution, InvestCate
 const defaultExpenseCategoryColor = "#9B7BFF";
 
 export default function SettingsScreen(): JSX.Element {
-  const [fileName, setFileName] = useState("mymoney-export.json");
+  const headerHeight = useHeaderHeight();
+  const [fileName, setFileName] = useState("openMoney-export.json");
   const [message, setMessage] = useState<string | null>(null);
   const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [containers, setContainers] = useState<Container[]>([]);
@@ -131,7 +133,7 @@ export default function SettingsScreen(): JSX.Element {
   };
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+    <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingTop: headerHeight + 12 }}>
       <Card>
         <Card.Title title="Anagrafiche" />
         <Card.Content style={{ gap: 16 }}>

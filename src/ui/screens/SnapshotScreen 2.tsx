@@ -1,11 +1,13 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { ScrollView } from "react-native";
 import { Button, Card, Text, TextInput } from "react-native-paper";
+import { useHeaderHeight } from "@react-navigation/elements";
 import { createSnapshot, listSnapshots, listSnapshotLines, createSnapshotLine } from "@/repositories/snapshotsRepo";
 import type { Snapshot, SnapshotLineDetail } from "@/repositories/types";
 import { isIsoDate } from "@/utils/dates";
 
 export default function SnapshotScreen(): JSX.Element {
+  const headerHeight = useHeaderHeight();
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [selectedSnapshotId, setSelectedSnapshotId] = useState<number | null>(null);
   const [lines, setLines] = useState<SnapshotLineDetail[]>([]);
@@ -83,7 +85,7 @@ export default function SnapshotScreen(): JSX.Element {
   };
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+    <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingTop: headerHeight + 12 }}>
       <Card>
         <Card.Title title="Crea snapshot" />
         <Card.Content style={{ gap: 8 }}>

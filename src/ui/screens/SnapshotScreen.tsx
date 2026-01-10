@@ -20,6 +20,7 @@ import PremiumCard from "@/ui/dashboard/components/PremiumCard";
 import SectionHeader from "@/ui/dashboard/components/SectionHeader";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useHeaderHeight } from "@react-navigation/elements";
 
 type DraftLine = {
   walletId: number;
@@ -29,6 +30,7 @@ type DraftLine = {
 export default function SnapshotScreen(): JSX.Element {
   const { tokens } = useDashboardTheme();
   const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
   const route = useRoute();
   const openNew = (route.params as { openNew?: boolean } | undefined)?.openNew;
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
@@ -213,7 +215,7 @@ export default function SnapshotScreen(): JSX.Element {
       <ScrollView
         contentContainerStyle={[
           styles.container,
-          { gap: tokens.spacing.md, paddingBottom: 160 + insets.bottom },
+          { gap: tokens.spacing.md, paddingBottom: 160 + insets.bottom, paddingTop: headerHeight + 12 },
         ]}
         alwaysBounceVertical
         bounces
@@ -222,7 +224,13 @@ export default function SnapshotScreen(): JSX.Element {
         <PremiumCard>
           <SectionHeader title="Snapshot" />
           <View style={styles.actionsRow}>
-            <Button mode="contained" buttonColor={tokens.colors.accent} onPress={openNewSnapshot}>
+            <Button
+              mode="contained"
+              buttonColor={tokens.colors.accent}
+              style={styles.fullWidthButton}
+              contentStyle={styles.fullWidthButtonContent}
+              onPress={openNewSnapshot}
+            >
               Nuovo Snapshot
             </Button>
           </View>
@@ -350,6 +358,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     marginTop: 12,
+    width: "100%",
+    alignItems: "stretch",
+  },
+  fullWidthButton: {
+    alignSelf: "stretch",
+    flex: 1,
+  },
+  fullWidthButtonContent: {
+    width: "100%",
   },
   list: {
     gap: 8,

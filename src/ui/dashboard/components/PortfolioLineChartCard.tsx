@@ -76,7 +76,7 @@ export default function PortfolioLineChartCard({ data }: Props): JSX.Element {
             <VictoryChart
               width={Math.max(width - 64, chartData.length * 70)}
               height={240}
-              padding={{ left: 50, right: 18, top: 10, bottom: 30 }}
+              padding={{ left: 50, right: 42, top: 10, bottom: 30 }}
               containerComponent={
                 <VictoryVoronoiContainer
                   voronoiBlacklist={["area"]}
@@ -100,15 +100,25 @@ export default function PortfolioLineChartCard({ data }: Props): JSX.Element {
                   tickLabels: { fontSize: 11, fill: tokens.colors.muted, padding: 6 },
                 }}
               />
-              <VictoryAxis
-                dependentAxis
-                tickFormat={(tick) => formatCompact(Number(tick))}
-                style={{
-                  axis: { stroke: "transparent" },
-                  grid: { stroke: tokens.colors.border },
-                  tickLabels: { fontSize: 11, fill: tokens.colors.muted, padding: 6 },
-                }}
-              />
+            <VictoryAxis
+              dependentAxis
+              tickFormat={(tick) => formatCompact(Number(tick))}
+              style={{
+                axis: { stroke: "transparent" },
+                grid: { stroke: tokens.colors.border },
+                tickLabels: { fontSize: 11, fill: tokens.colors.muted, padding: 6 },
+              }}
+            />
+            <VictoryAxis
+              dependentAxis
+              orientation="right"
+              tickFormat={(tick) => formatCompact(Number(tick))}
+              style={{
+                axis: { stroke: "transparent" },
+                grid: { stroke: "transparent" },
+                tickLabels: { fontSize: 11, fill: tokens.colors.muted, padding: 6 },
+              }}
+            />
               <VictoryArea
                 name="area"
                 data={chartData}
@@ -153,6 +163,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   chartScroll: {
-    paddingRight: 8,
+    paddingRight: 28,
   },
 });

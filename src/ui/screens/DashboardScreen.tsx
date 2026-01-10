@@ -3,6 +3,7 @@ import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useHeaderHeight } from "@react-navigation/elements";
 import { listWallets } from "@/repositories/walletsRepo";
 import { getLatestSnapshot, listSnapshotLines, listSnapshots } from "@/repositories/snapshotsRepo";
 import { listIncomeEntries } from "@/repositories/incomeEntriesRepo";
@@ -31,6 +32,7 @@ export default function DashboardScreen(): JSX.Element {
   const navigation = useNavigation<Nav>();
   const { tokens } = useDashboardTheme();
   const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [walletsCount, setWalletsCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -129,7 +131,7 @@ export default function DashboardScreen(): JSX.Element {
         contentContainerStyle={[
           styles.container,
           {
-            paddingTop: insets.top - 40,
+            paddingTop: headerHeight + 12,
             paddingBottom: 160 + insets.bottom,
           },
         ]}
