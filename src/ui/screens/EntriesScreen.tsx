@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Platform, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { Button, SegmentedButtons, Switch, Text, TextInput } from "react-native-paper";
-import { useRoute } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { listIncomeEntries, createIncomeEntry, updateIncomeEntry, deleteIncomeEntry } from "@/repositories/incomeEntriesRepo";
@@ -18,8 +18,14 @@ import { useDashboardTheme } from "@/ui/dashboard/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 
-type Mode = "income" | "expense";
+type EntryType = "income" | "expense";
+type FormMode = "create" | "edit";
 
+type EntriesRouteParams = {
+  entryType?: EntryType;
+  formMode?: FormMode;
+  entryId?: number;
+};
 
 type FormState = {
   id: number | null;
@@ -49,11 +55,15 @@ export default function EntriesScreen(): JSX.Element {
   const { tokens } = useDashboardTheme();
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
+  const navigation = useNavigation();
   const route = useRoute();
   const scrollRef = useRef<ScrollView | null>(null);
-  const routeMode = (route.params as { mode?: Mode; entryId?: number } | undefined)?.mode;
-  const routeEntryId = (route.params as { mode?: Mode; entryId?: number } | undefined)?.entryId;
-  const [mode, setMode] = useState<Mode>(routeMode ?? "income");
+  const routeParams = (route.params ?? {}) as EntriesRouteParams;
+  const [entryType, setEntryType] = useState<EntryType>(routeParams.entryType ?? "income");
+  const [formMode, setFormMode] = useState<FormMode>(routeParams.formMode ?? "create");
+  const [editingId, setEditingId] = useState<number | null>(
+    routeParams.formMode === "edit" ? routeParams.entryId ?? null : null
+  );
   const [incomeEntries, setIncomeEntries] = useState<IncomeEntry[]>([]);
   const [expenseEntries, setExpenseEntries] = useState<ExpenseEntry[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
@@ -61,7 +71,7 @@ export default function EntriesScreen(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [showNewEntry, setShowNewEntry] = useState(false);
+  const [showNewEntry, setShowNewEntry] = useState(routeParams.formMode === "edit");
 
   const load = useCallback(async () => {
     const [income, expense, cats] = await Promise.all([
@@ -85,25 +95,33 @@ export default function EntriesScreen(): JSX.Element {
   }, [load]);
 
   useEffect(() => {
-    if (routeMode) {
-      setMode(routeMode);
+    if (routeParams.entryType) {
+      setEntryType(routeParams.entryType);
     }
-  }, [routeMode]);
+  }, [routeParams.entryType]);
 
   useEffect(() => {
-    if (!routeEntryId) return;
-    if (form.id === routeEntryId) return;
-    const entryMode: Mode = routeMode ?? "income";
-    const entriesList = entryMode === "income" ? incomeEntries : expenseEntries;
-    const found = entriesList.find((entry) => entry.id === routeEntryId);
-    if (found) {
-      applyEntryToForm(found, entryMode);
+    const nextFormMode = routeParams.formMode;
+    if (nextFormMode === "edit" && typeof routeParams.entryId === "number") {
+      const targetType = routeParams.entryType ?? entryType;
+      const entriesList = targetType === "income" ? incomeEntries : expenseEntries;
+      const found = entriesList.find((entry) => entry.id === routeParams.entryId);
+      if (found) {
+        applyEntryToForm(found, targetType);
+        setShowNewEntry(true);
+      }
+      return;
+    }
+    if (nextFormMode === "create") {
+      setFormMode("create");
+      setEditingId(null);
+      setForm(emptyForm);
       setShowNewEntry(true);
     }
-  }, [routeEntryId, routeMode, incomeEntries, expenseEntries, form.id]);
+  }, [routeParams.formMode, routeParams.entryId, routeParams.entryType, incomeEntries, expenseEntries]);
 
-  const applyEntryToForm = (entry: IncomeEntry | ExpenseEntry, entryMode: Mode) => {
-    setMode(entryMode);
+  const applyEntryToForm = (entry: IncomeEntry | ExpenseEntry, entryMode: EntryType) => {
+    setEntryType(entryMode);
     setForm({
       id: entry.id,
       name: entry.name,
@@ -114,6 +132,25 @@ export default function EntriesScreen(): JSX.Element {
       recurring: entry.recurrence_frequency !== null && entry.one_shot === 0,
       frequency: entry.recurrence_frequency ?? "MONTHLY",
       interval: entry.recurrence_interval?.toString() ?? "1",
+    });
+    setFormMode("edit");
+    setEditingId(entry.id);
+  };
+
+  const resetToCreateMode = () => {
+    setForm(emptyForm);
+    setFormMode("create");
+    setEditingId(null);
+    navigation.setParams({ formMode: "create", entryId: undefined, entryType });
+  };
+
+  const toggleNewEntryVisibility = () => {
+    setShowNewEntry((prev) => {
+      const next = !prev;
+      if (next) {
+        resetToCreateMode();
+      }
+      return next;
     });
   };
 
@@ -138,7 +175,16 @@ export default function EntriesScreen(): JSX.Element {
     const oneShot = recurring ? 0 : 1;
     const active = form.active ? 1 : 0;
 
-    if (mode === "income") {
+    if (formMode === "create" && form.id) {
+      setError("Rimuovi l'id prima di creare una nuova voce.");
+      return;
+    }
+    if (formMode === "edit" && !form.id) {
+      setError("Nessuna voce selezionata per la modifica.");
+      return;
+    }
+
+    if (entryType === "income") {
       const payload: Omit<IncomeEntry, "id"> = {
         name: form.name.trim(),
         amount,
@@ -150,8 +196,8 @@ export default function EntriesScreen(): JSX.Element {
         active,
         wallet_id: null,
       };
-      if (form.id) {
-        await updateIncomeEntry(form.id, payload);
+      if (formMode === "edit") {
+        await updateIncomeEntry(form.id!, payload);
       } else {
         await createIncomeEntry(payload);
       }
@@ -173,29 +219,31 @@ export default function EntriesScreen(): JSX.Element {
         wallet_id: null,
         expense_category_id: categoryId,
       };
-      if (form.id) {
-        await updateExpenseEntry(form.id, payload);
+      if (formMode === "edit") {
+        await updateExpenseEntry(form.id!, payload);
       } else {
         await createExpenseEntry(payload);
       }
     }
 
-    setForm(emptyForm);
+    resetToCreateMode();
+    setShowNewEntry(true);
     await load();
   };
 
   const removeEntry = async () => {
-    if (!form.id) return;
-    if (mode === "income") {
+    if (formMode !== "edit" || !form.id) return;
+    if (entryType === "income") {
       await deleteIncomeEntry(form.id);
     } else {
       await deleteExpenseEntry(form.id);
     }
-    setForm(emptyForm);
+    resetToCreateMode();
+    setShowNewEntry(true);
     await load();
   };
 
-  const entries = mode === "income" ? incomeEntries : expenseEntries;
+  const entries = entryType === "income" ? incomeEntries : expenseEntries;
 
   const activeCategories = useMemo(() => categories.filter((cat) => cat.active === 1), [categories]);
   const categoryById = useMemo(() => {
@@ -245,8 +293,8 @@ export default function EntriesScreen(): JSX.Element {
         <PremiumCard>
           <SectionHeader title="Seleziona il tipo" />
           <SegmentedButtons
-            value={mode}
-            onValueChange={(value) => setMode(value as Mode)}
+            value={entryType}
+            onValueChange={(value) => setEntryType(value as EntryType)}
             buttons={[
               { value: "income", label: "Entrate" },
               { value: "expense", label: "Uscite" },
@@ -265,7 +313,7 @@ export default function EntriesScreen(): JSX.Element {
                 style={styles.addButton}
                 contentStyle={styles.addButtonContent}
                 labelStyle={styles.addButtonLabel}
-                onPress={() => setShowNewEntry((prev) => !prev)}
+                onPress={toggleNewEntryVisibility}
               >
                 <MaterialCommunityIcons name="plus" size={22} color="#FFFFFF" />
               </Button>
@@ -319,7 +367,7 @@ export default function EntriesScreen(): JSX.Element {
                     }}
                   />
                 )}
-                {mode === "expense" && (
+                {entryType === "expense" && (
                   <PremiumCard style={{ backgroundColor: tokens.colors.surface2 }}>
                     <SectionHeader title="Categoria spesa" />
                     <View style={styles.list}>
@@ -432,7 +480,7 @@ export default function EntriesScreen(): JSX.Element {
                       ? categoryById.get(entry.expense_category_id)
                       : null;
                   return (
-                    <React.Fragment key={`${mode}-${entry.id}`}>
+                      <React.Fragment key={`${entryType}-${entry.id}`}>
                       <View style={styles.row}>
                         <Text style={[styles.cell, { color: tokens.colors.text }, styles.cellDate]}>
                           {formatShortDate(entry.start_date)}
@@ -454,12 +502,16 @@ export default function EntriesScreen(): JSX.Element {
                           )}
                         </View>
                         <View style={[styles.cell, styles.cellAction]}>
-                          <PressScale
-                            onPress={() => {
-                              applyEntryToForm(entry, mode);
-                              setShowNewEntry(true);
-                              scrollRef.current?.scrollTo({ y: 0, animated: true });
-                            }}
+                        <PressScale
+                          onPress={() => {
+                            navigation.setParams({
+                              formMode: "edit",
+                              entryId: entry.id,
+                              entryType,
+                            });
+                            setShowNewEntry(true);
+                            scrollRef.current?.scrollTo({ y: 0, animated: true });
+                          }}
                             style={[
                               styles.actionButton,
                               { borderColor: tokens.colors.accent, backgroundColor: `${tokens.colors.accent}14` },

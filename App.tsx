@@ -17,6 +17,7 @@ import GlassTabBar from "@/ui/components/GlassTabBar";
 import AppBackground from "@/ui/components/AppBackground";
 import AppBootScreen from "@/ui/components/AppBootScreen";
 import { DashboardThemeProvider } from "@/ui/dashboard/theme";
+import ProfileButton from "@/components/header/ProfileButton";
 
 enableScreens(false);
 
@@ -62,19 +63,20 @@ export default function App(): JSX.Element {
               <NavigationContainer theme={navTheme}>
                 <Tab.Navigator
                   screenOptions={({ route }) => ({
-                  headerTitleAlign: "center",
-                  headerTransparent: true,
-                  headerBackground: () => (
-                    <BlurView
-                      intensity={35}
-                      tint={headerBlurTint}
-                      style={[
-                        StyleSheet.absoluteFill,
-                        { borderBottomWidth: 1, borderBottomColor: headerBorder, backgroundColor: headerOverlay },
-                      ]}
-                    />
-                  ),
-                  tabBarStyle: { display: "none" },
+                    headerTitleAlign: "center",
+                    headerTransparent: true,
+                    headerBackground: () => (
+                      <BlurView
+                        intensity={35}
+                        tint={headerBlurTint}
+                        style={[
+                          StyleSheet.absoluteFill,
+                          { borderBottomWidth: 1, borderBottomColor: headerBorder, backgroundColor: headerOverlay },
+                        ]}
+                      />
+                    ),
+                    headerRight: () => (route.name === "Profilo" ? null : <ProfileButton />),
+                    tabBarStyle: { display: "none" },
                   })}
                   tabBar={(props) => <GlassTabBar {...props} />}
                 >

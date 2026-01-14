@@ -37,7 +37,6 @@ export default function DashboardScreen(): JSX.Element {
   const [walletsCount, setWalletsCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string | null>(null);
   const [prompted, setPrompted] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -47,14 +46,12 @@ export default function DashboardScreen(): JSX.Element {
       const wallets = await listWallets(true);
       setWalletsCount(wallets.length);
 
-      const [snapshots, incomeEntries, expenseEntries, expenseCategories, pref, prefName, prefSurname] = await Promise.all([
+      const [snapshots, incomeEntries, expenseEntries, expenseCategories, pref] = await Promise.all([
         listSnapshots(),
         listIncomeEntries(),
         listExpenseEntries(),
         listExpenseCategories(),
         getPreference("chart_points"),
-        getPreference("profile_name"),
-        getPreference("profile_surname"),
       ]);
 
       const latestSnapshot = await getLatestSnapshot();
@@ -72,9 +69,6 @@ export default function DashboardScreen(): JSX.Element {
 
       const chartPointsRaw = pref ? Number(pref.value) : 6;
       const chartPoints = Number.isFinite(chartPointsRaw) ? Math.min(12, Math.max(3, chartPointsRaw)) : 6;
-      const firstName = prefName?.value?.trim();
-      setUserName(firstName || null);
-
       const data = buildDashboardData({
         latestLines,
         snapshots: snapshots.slice(-chartPoints),
@@ -156,12 +150,6 @@ export default function DashboardScreen(): JSX.Element {
 
         {dashboard ? (
           <>
-            <View style={[styles.section, styles.greetingSection]}>
-              <Text style={[styles.greeting, { color: tokens.colors.text }]}>
-                {userName ? `Ciao ${userName}` : "Ciao"}
-              </Text>
-            </View>
-
             <View style={styles.section}>
               <KPIStrip items={dashboard.kpis} />
             </View>
@@ -183,10 +171,16 @@ export default function DashboardScreen(): JSX.Element {
             </View>
 
             <View style={styles.section}>
-              <RecurrencesTableCard
-                rows={dashboard.recurrences}
-                onPressRow={(row) => navigation.navigate("Entrate/Uscite", { mode: row.type, entryId: row.entryId })}
-              />
+                <RecurrencesTableCard
+                  rows={dashboard.recurrences}
+                  onPressRow={(row) =>
+                    navigation.navigate("Entrate/Uscite", {
+                      entryType: row.type,
+                      formMode: "edit",
+                      entryId: row.entryId,
+                    })
+                  }
+                />
             </View>
           </>
         ) : null}
@@ -206,15 +200,6 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: 12,
-  },
-  greetingSection: {
-    alignItems: "center",
-    gap: 8,
-  },
-  greeting: {
-    fontSize: 28,
-    fontWeight: "700",
-    textAlign: "center",
   },
   emptyTitle: {
     fontSize: 18,

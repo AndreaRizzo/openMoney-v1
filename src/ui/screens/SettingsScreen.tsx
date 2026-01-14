@@ -1,7 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Alert, Platform, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { Button, List, SegmentedButtons, Switch, Text, TextInput } from "react-native-paper";
-import { useNavigation } from "@react-navigation/native";
 import * as FileSystem from "expo-file-system";
 import * as LegacyFileSystem from "expo-file-system/legacy";
 import * as DocumentPicker from "expo-document-picker";
@@ -54,7 +53,6 @@ function nextPresetColor(current: string): string {
 
 export default function SettingsScreen(): JSX.Element {
   const { tokens } = useDashboardTheme();
-  const navigation = useNavigation<{ navigate: (name: string) => void }>();
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const [message, setMessage] = useState<string | null>(null);
@@ -784,13 +782,6 @@ export default function SettingsScreen(): JSX.Element {
         <PremiumCard>
           <SectionHeader title="Dati" />
           <View style={styles.sectionContent}>
-            <Button
-              mode="outlined"
-              textColor={tokens.colors.text}
-              onPress={() => navigation.navigate("Profilo")}
-            >
-              Modifica profilo
-            </Button>
             <Button mode="contained" buttonColor={tokens.colors.accent} onPress={exportData}>
               Esporta
             </Button>
