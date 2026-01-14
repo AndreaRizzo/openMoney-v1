@@ -36,6 +36,10 @@ export default function PortfolioLineChartCard({ data }: Props): JSX.Element {
     [data, mode]
   );
 
+  const visibleWidth = Math.max(width - 64, 0);
+  const chartWidth = Math.max(visibleWidth, chartData.length * 70);
+  const chartOffset = Math.max(chartWidth - visibleWidth, 0);
+
   return (
     <View>
       <PremiumCard>
@@ -72,9 +76,14 @@ export default function PortfolioLineChartCard({ data }: Props): JSX.Element {
         {chartData.length === 0 ? (
           <Text style={[styles.empty, { color: tokens.colors.muted }]}>Nessun dato disponibile.</Text>
         ) : (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chartScroll}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={[styles.chartScroll, { justifyContent: "flex-end" }]}
+            contentOffset={{ x: chartOffset }}
+          >
             <VictoryChart
-              width={Math.max(width - 64, chartData.length * 70)}
+              width={chartWidth}
               height={240}
               padding={{ left: 50, right: 42, top: 10, bottom: 30 }}
               containerComponent={

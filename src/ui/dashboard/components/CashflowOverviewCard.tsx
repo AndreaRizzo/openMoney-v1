@@ -28,7 +28,9 @@ export default function CashflowOverviewCard({ cashflow }: Props): JSX.Element {
   const savingsColor = cashflow.avgSavings >= 0 ? tokens.colors.green : tokens.colors.red;
   const avgIncomeYear = cashflow.avgIncome * 12;
   const avgExpenseYear = cashflow.avgExpense * 12;
-  const chartWidth = Math.max(width - 64, cashflow.months.length * 70);
+  const visibleWidth = Math.max(width - 64, 0);
+  const chartWidth = Math.max(visibleWidth, cashflow.months.length * 70);
+  const chartOffset = Math.max(chartWidth - visibleWidth, 0);
   const tooltipFlyout = { fill: tokens.colors.surface2, stroke: tokens.colors.border };
   const tooltipText = { fill: tokens.colors.text, fontSize: 11 };
 
@@ -58,7 +60,12 @@ export default function CashflowOverviewCard({ cashflow }: Props): JSX.Element {
             </View>
           </View>
           <View style={[styles.chartCol, isCompact && styles.chartColStacked]}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chartScroll}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={[styles.chartScroll, { justifyContent: "flex-end" }]}
+              contentOffset={{ x: chartOffset }}
+            >
               <VictoryChart
                 width={chartWidth}
                 height={200}

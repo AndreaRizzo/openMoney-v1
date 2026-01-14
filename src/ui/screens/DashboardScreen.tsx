@@ -131,7 +131,7 @@ export default function DashboardScreen(): JSX.Element {
         contentContainerStyle={[
           styles.container,
           {
-            paddingTop: headerHeight + 12,
+            paddingTop: headerHeight + 6,
             paddingBottom: 160 + insets.bottom,
           },
         ]}
@@ -156,14 +156,17 @@ export default function DashboardScreen(): JSX.Element {
 
         {dashboard ? (
           <>
+            <View style={[styles.section, styles.greetingSection]}>
+              <Text style={[styles.greeting, { color: tokens.colors.text }]}>
+                {userName ? `Ciao ${userName}` : "Ciao"}
+              </Text>
+            </View>
+
             <View style={styles.section}>
               <KPIStrip items={dashboard.kpis} />
             </View>
 
             <View style={styles.section}>
-              <Text style={[styles.greeting, { color: tokens.colors.text }]}>
-                {userName ? `Ciao ${userName}` : "Ciao"}
-              </Text>
               <PortfolioLineChartCard data={dashboard.portfolioSeries} />
             </View>
 
@@ -204,9 +207,14 @@ const styles = StyleSheet.create({
   section: {
     gap: 12,
   },
+  greetingSection: {
+    alignItems: "center",
+    gap: 8,
+  },
   greeting: {
     fontSize: 28,
     fontWeight: "700",
+    textAlign: "center",
   },
   emptyTitle: {
     fontSize: 18,
