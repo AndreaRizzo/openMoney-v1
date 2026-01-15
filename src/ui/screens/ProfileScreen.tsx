@@ -10,15 +10,11 @@ import { useHeaderHeight } from "@react-navigation/elements";
 
 type ProfileState = {
   name: string;
-  surname: string;
-  profession: string;
   email: string;
 };
 
 const emptyProfile: ProfileState = {
   name: "",
-  surname: "",
-  profession: "",
   email: "",
 };
 
@@ -31,16 +27,9 @@ export default function ProfileScreen(): JSX.Element {
   const [refreshing, setRefreshing] = useState(false);
 
   const load = async () => {
-    const [name, surname, profession, email] = await Promise.all([
-      getPreference("profile_name"),
-      getPreference("profile_surname"),
-      getPreference("profile_profession"),
-      getPreference("profile_email"),
-    ]);
+    const [name, email] = await Promise.all([getPreference("profile_name"), getPreference("profile_email")]);
     setForm({
       name: name?.value ?? "",
-      surname: surname?.value ?? "",
-      profession: profession?.value ?? "",
       email: email?.value ?? "",
     });
   };
@@ -57,14 +46,12 @@ export default function ProfileScreen(): JSX.Element {
 
   const save = async () => {
     setMessage(null);
-    if (!form.name.trim() || !form.surname.trim() || !form.email.trim()) {
-      setMessage("Nome, cognome ed email sono obbligatori.");
+    if (!form.name.trim() || !form.email.trim()) {
+      setMessage("Nome ed email sono obbligatori.");
       return;
     }
     await Promise.all([
       setPreference("profile_name", form.name.trim()),
-      setPreference("profile_surname", form.surname.trim()),
-      setPreference("profile_profession", form.profession.trim()),
       setPreference("profile_email", form.email.trim()),
     ]);
     setMessage("Profilo salvato.");
@@ -95,18 +82,6 @@ export default function ProfileScreen(): JSX.Element {
               value={form.name}
               {...inputProps}
               onChangeText={(value) => setForm((prev) => ({ ...prev, name: value }))}
-            />
-            <TextInput
-              label="Cognome"
-              value={form.surname}
-              {...inputProps}
-              onChangeText={(value) => setForm((prev) => ({ ...prev, surname: value }))}
-            />
-            <TextInput
-              label="Professione (facoltativo)"
-              value={form.profession}
-              {...inputProps}
-              onChangeText={(value) => setForm((prev) => ({ ...prev, profession: value }))}
             />
             <TextInput
               label="Email"
