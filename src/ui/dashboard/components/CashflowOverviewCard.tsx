@@ -17,9 +17,11 @@ import type { CashflowSummary } from "@/ui/dashboard/types";
 
 type Props = {
   cashflow: CashflowSummary;
+  hideHeader?: boolean;
+  noCard?: boolean;
 };
 
-export default function CashflowOverviewCard({ cashflow }: Props): JSX.Element {
+export default function CashflowOverviewCard({ cashflow, hideHeader = false, noCard = false }: Props): JSX.Element {
   const { tokens } = useDashboardTheme();
   const { width } = useWindowDimensions();
   const isCompact = width < 380;
@@ -34,9 +36,9 @@ export default function CashflowOverviewCard({ cashflow }: Props): JSX.Element {
   const tooltipFlyout = { fill: tokens.colors.surface2, stroke: tokens.colors.border };
   const tooltipText = { fill: tokens.colors.text, fontSize: 11 };
 
-  return (
-    <PremiumCard>
-      <SectionHeader title="Cash Flow. Panoramica" />
+  const content = (
+    <>
+      {!hideHeader && <SectionHeader title="Cash Flow. Panoramica" />}
       {cashflow.months.length === 0 ? (
         <Text style={[styles.empty, { color: tokens.colors.muted }]}>Nessun dato disponibile.</Text>
       ) : (
@@ -120,8 +122,14 @@ export default function CashflowOverviewCard({ cashflow }: Props): JSX.Element {
           </View>
         </View>
       )}
-    </PremiumCard>
+    </>
   );
+
+  if (noCard) {
+    return <>{content}</>;
+  }
+
+  return <PremiumCard>{content}</PremiumCard>;
 }
 
 const styles = StyleSheet.create({

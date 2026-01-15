@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { StyleSheet, View, useWindowDimensions } from "react-native";
 import { Text } from "react-native-paper";
 import { VictoryPie } from "victory-native";
@@ -11,20 +11,28 @@ import type { DistributionItem } from "@/ui/dashboard/types";
 
 type Props = {
   items: DistributionItem[];
+  hideHeader?: boolean;
+  noCard?: boolean;
 };
 
-export default function DonutDistributionCard({ items }: Props): JSX.Element {
+export default function DonutDistributionCard({ items, hideHeader = false, noCard = false }: Props): JSX.Element {
   const { tokens } = useDashboardTheme();
   const [selected, setSelected] = useState<number | null>(null);
   const { width } = useWindowDimensions();
   const isCompact = width < 380;
-  const total = useMemo(() => items.reduce((sum, item) => sum + item.value, 0), [items]);
-  const active = selected !== null ? items[selected] : null;
+  const filteredItems = useMemo(() => items.filter((item) => item.value !== 0), [items]);
+  useEffect(() => {
+    if (selected !== null && selected >= filteredItems.length) {
+      setSelected(null);
+    }
+  }, [filteredItems, selected]);
+  const total = useMemo(() => filteredItems.reduce((sum, item) => sum + item.value, 0), [filteredItems]);
+  const active = selected !== null ? filteredItems[selected] : null;
 
-  return (
-    <PremiumCard>
-      <SectionHeader title="Distribuzione patrimonio" />
-      {items.length === 0 ? (
+  const content = (
+    <>
+      {!hideHeader && <SectionHeader title="Distribuzione patrimonio" />}
+      {filteredItems.length === 0 ? (
         <Text style={[styles.empty, { color: tokens.colors.muted }]}>Nessun dato disponibile.</Text>
       ) : (
         <View style={[styles.content, isCompact && styles.contentStacked]}>
@@ -34,8 +42,8 @@ export default function DonutDistributionCard({ items }: Props): JSX.Element {
               innerRadius={60}
               padAngle={1}
               cornerRadius={6}
-              data={items.map((item) => ({ x: item.label, y: item.value, color: item.color }))}
-              colorScale={items.map((item) => item.color)}
+              data={filteredItems.map((item) => ({ x: item.label, y: item.value, color: item.color }))}
+              colorScale={filteredItems.map((item) => item.color)}
               labels={() => ""}
               radius={({ index }) => (index === selected ? 100 : 92)}
               style={{ data: { stroke: tokens.colors.surface2, strokeWidth: 2 } }}
@@ -63,8 +71,8 @@ export default function DonutDistributionCard({ items }: Props): JSX.Element {
               </Text>
             </View>
           </View>
-          <View style={[styles.list, isCompact && styles.listStacked]}>
-            {items.map((item, index) => {
+          <View style={[styles.list, styles.legendContainer, isCompact && styles.listStacked]}>
+            {filteredItems.map((item, index) => {
               const isActive = index === selected;
               return (
                 <PressScale key={item.id} onPress={() => setSelected(index)} style={styles.row}>
@@ -86,14 +94,21 @@ export default function DonutDistributionCard({ items }: Props): JSX.Element {
           </View>
         </View>
       )}
-    </PremiumCard>
+    </>
   );
+
+  if (noCard) {
+    return <>{content}</>;
+  }
+
+  return <PremiumCard>{content}</PremiumCard>;
 }
 
 const styles = StyleSheet.create({
   content: {
     flexDirection: "row",
     gap: 16,
+    paddingLeft: 14,
   },
   contentStacked: {
     flexDirection: "column",
@@ -125,19 +140,30 @@ const styles = StyleSheet.create({
   },
   listStacked: {
     paddingTop: 12,
+    alignSelf: "flex-end",
+    marginLeft: 0,
+  },
+  legendContainer: {
+    justifyContent: "flex-end",
+    alignItems: "flex-end",
+    marginLeft: 24,
   },
   row: {
-    gap: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
   },
   rowTitle: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    flex: 1,
   },
   rowMeta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+    flexDirection: "column",
+    alignItems: "flex-end",
+    gap: 2,
   },
   dot: {
     width: 8,

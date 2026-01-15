@@ -12,6 +12,8 @@ import type { RecurrenceRow } from "@/ui/dashboard/types";
 type Props = {
   rows: RecurrenceRow[];
   onPressRow?: (row: RecurrenceRow) => void;
+  hideHeader?: boolean;
+  noCard?: boolean;
 };
 
 const categoryPalette = ["#9B7BFF", "#5C9DFF", "#F6C177", "#66D19E", "#C084FC", "#FF8FAB", "#6EE7B7", "#94A3B8"];
@@ -25,11 +27,16 @@ function hashLabel(label: string): number {
   return Math.abs(hash);
 }
 
-export default function RecurrencesTableCard({ rows, onPressRow }: Props): JSX.Element {
+export default function RecurrencesTableCard({
+  rows,
+  onPressRow,
+  hideHeader = false,
+  noCard = false,
+}: Props): JSX.Element {
   const { tokens } = useDashboardTheme();
-  return (
-    <PremiumCard>
-      <SectionHeader title="Prossimi movimenti programmati" />
+  const content = (
+    <>
+      {!hideHeader && <SectionHeader title="Prossimi movimenti" />}
       {rows.length === 0 ? (
         <Text style={[styles.empty, { color: tokens.colors.muted }]}>Nessun movimento programmato.</Text>
       ) : (
@@ -37,39 +44,39 @@ export default function RecurrencesTableCard({ rows, onPressRow }: Props): JSX.E
           <View>
             <View style={styles.headerRow}>
               <Text
-                style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellDate]}
+                style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellDate, styles.cellCenter]}
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
                 Data
               </Text>
               <Text
-                style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellDesc]}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                Nome
-              </Text>
-              <Text
-                style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellAmount]}
+                style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellAmount, styles.cellCenter]}
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
                 Importo
               </Text>
               <Text
-                style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellCategory]}
+                style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellCategory, styles.cellCenter]}
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
                 Categoria
               </Text>
               <Text
-                style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellAction]}
+                style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellDesc, styles.cellCenter]}
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
-                Modifica
+                Nome
+              </Text>
+              <Text
+                style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellAction, styles.cellCenter]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                Mod
               </Text>
             </View>
             {rows.map((item, index) => {
@@ -81,33 +88,33 @@ export default function RecurrencesTableCard({ rows, onPressRow }: Props): JSX.E
               return (
                 <React.Fragment key={item.id}>
                   <View style={styles.row}>
-                      <Text style={[styles.cell, { color: tokens.colors.text }, styles.cellDate]}>
-                        {formatShortDate(item.date)}
-                      </Text>
-                      <Text
-                        style={[styles.cell, { color: tokens.colors.text }, styles.cellDesc]}
-                        numberOfLines={1}
-                        ellipsizeMode="tail"
+                    <Text style={[styles.cell, { color: tokens.colors.text }, styles.cellDate, styles.cellCenter]}>
+                      {formatShortDate(item.date)}
+                    </Text>
+                    <Text style={[styles.cell, styles.cellAmount, { color: amountColor }, styles.cellCenter]}>
+                      {formatEUR(item.amount)}
+                    </Text>
+                    <View style={[styles.cell, styles.cellCategory, styles.cellCenter]}>
+                      <Chip label={item.category} color={categoryColor} />
+                    </View>
+                    <Text
+                      style={[styles.cell, { color: tokens.colors.text }, styles.cellDesc, styles.cellCenter]}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {item.description}
+                    </Text>
+                    <View style={[styles.cell, styles.cellAction]}>
+                      <PressScale
+                        onPress={() => onPressRow?.(item)}
+                        style={[
+                          styles.actionButton,
+                          { borderColor: tokens.colors.accent, backgroundColor: `${tokens.colors.accent}14` },
+                        ]}
                       >
-                        {item.description}
-                      </Text>
-                      <Text style={[styles.cell, styles.cellAmount, { color: amountColor }]}>
-                        {formatEUR(item.amount)}
-                      </Text>
-                      <View style={[styles.cell, styles.cellCategory]}>
-                        <Chip label={item.category} color={categoryColor} />
-                      </View>
-                      <View style={[styles.cell, styles.cellAction]}>
-                        <PressScale
-                          onPress={() => onPressRow?.(item)}
-                          style={[
-                            styles.actionButton,
-                            { borderColor: tokens.colors.accent, backgroundColor: `${tokens.colors.accent}14` },
-                          ]}
-                        >
-                          <Text style={[styles.actionText, { color: tokens.colors.accent }]}>Modifica</Text>
-                        </PressScale>
-                      </View>
+                        <Text style={[styles.actionText, { color: tokens.colors.accent }]}>Modifica</Text>
+                      </PressScale>
+                    </View>
                   </View>
                   {index < rows.length - 1 ? (
                     <View style={[styles.separator, { backgroundColor: tokens.colors.border }]} />
@@ -118,8 +125,14 @@ export default function RecurrencesTableCard({ rows, onPressRow }: Props): JSX.E
           </View>
         </ScrollView>
       )}
-    </PremiumCard>
+    </>
   );
+
+  if (noCard) {
+    return <>{content}</>;
+  }
+
+  return <PremiumCard>{content}</PremiumCard>;
 }
 
 const styles = StyleSheet.create({
@@ -149,6 +162,10 @@ const styles = StyleSheet.create({
   cell: {
     fontSize: 12,
     minWidth: 0,
+    textAlign: "center",
+  },
+  cellCenter: {
+    textAlign: "center",
   },
   cellDate: {
     width: 70,
@@ -161,6 +178,7 @@ const styles = StyleSheet.create({
     marginRight: 6,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 4,
     flexWrap: "wrap",
   },

@@ -31,7 +31,8 @@ function toMonthKey(year: number, month: number): string {
 
 function buildPortfolioSeries(
   snapshots: Snapshot[],
-  snapshotLines: Record<number, SnapshotLineDetail[]>
+  snapshotLines: Record<number, SnapshotLineDetail[]>,
+  latestLines: SnapshotLineDetail[]
 ): PortfolioPoint[] {
   const points = snapshots
     .map((snapshot) => {
@@ -45,6 +46,20 @@ function buildPortfolioSeries(
       };
     })
     .sort((a, b) => (a.date < b.date ? -1 : 1));
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const hasCurrentMonthPoint = points.some((point) => point.date.startsWith(currentMonthKey));
+  if (!hasCurrentMonthPoint && latestLines.length > 0) {
+    const totals = totalsByWalletType(latestLines);
+    const currentMonthDate = `${currentMonthKey}-01`;
+    points.push({
+      date: currentMonthDate,
+      total: totals.netWorth,
+      liquidity: totals.liquidity,
+      investments: totals.investments,
+    });
+    points.sort((a, b) => (a.date < b.date ? -1 : 1));
+  }
   return points;
 }
 
@@ -195,7 +210,7 @@ function buildRecurrences(
 }
 
 export function buildDashboardData(input: DashboardInput): DashboardData {
-  const portfolio = buildPortfolioSeries(input.snapshots, input.snapshotLines);
+  const portfolio = buildPortfolioSeries(input.snapshots, input.snapshotLines, input.latestLines);
   const kpis = buildKpis(input.latestLines, portfolio);
   const distributions = buildDistribution(input.latestLines);
   const cashflowMonths = buildCashflow(input.incomeEntries, input.expenseEntries);

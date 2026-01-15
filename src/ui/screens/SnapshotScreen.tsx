@@ -61,6 +61,7 @@ export default function SnapshotScreen(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showAllMonths, setShowAllMonths] = useState(false);
   const [activeMonthKey, setActiveMonthKey] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -251,6 +252,9 @@ export default function SnapshotScreen(): JSX.Element {
   }, [activeMonthKey, monthGroups]);
 
   const activeMonth = monthGroups.find((group) => group.key === activeMonthKey) ?? monthGroups[0];
+  const monthLimit = showAllMonths ? monthGroups.length : 5;
+  const visibleMonthGroups = monthGroups.slice(0, monthLimit);
+  const hasMoreMonths = monthGroups.length > visibleMonthGroups.length;
 
   useEffect(() => {
     if (!activeMonth) return;
@@ -365,7 +369,7 @@ export default function SnapshotScreen(): JSX.Element {
             <PremiumCard>
               <SectionHeader title="Filtra snapshot per mese" />
               <View style={styles.monthRow}>
-                {monthGroups.map((group) => (
+                {visibleMonthGroups.map((group) => (
                   <Button
                     key={group.key}
                     mode={group.key === activeMonthKey ? "contained" : "outlined"}
@@ -380,6 +384,17 @@ export default function SnapshotScreen(): JSX.Element {
                     {group.label}
                   </Button>
                 ))}
+                {hasMoreMonths && (
+                  <Button
+                    mode="outlined"
+                    contentStyle={styles.monthButtonContent}
+                    style={styles.monthButton}
+                    textColor={tokens.colors.text}
+                    onPress={() => setShowAllMonths(true)}
+                  >
+                    Carica altri
+                  </Button>
+                )}
               </View>
             </PremiumCard>
             <PremiumCard>
@@ -467,8 +482,11 @@ const styles = StyleSheet.create({
   },
   monthButton: {
     borderRadius: 999,
+    minHeight: 44,
   },
   monthButtonContent: {
-    paddingVertical: 6,
+    paddingHorizontal: 16,
+    height: 44,
+    justifyContent: "center",
   },
 });

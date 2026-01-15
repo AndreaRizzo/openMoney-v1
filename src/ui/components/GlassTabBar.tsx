@@ -32,11 +32,12 @@ export default function GlassTabBar({ state, descriptors, navigation }: BottomTa
         tint={blurTint}
         style={[
           styles.bar,
-          borderColor,
-          backgroundColor: barBg,
-        },
-      ]}
-    >
+          {
+            borderColor,
+            backgroundColor: barBg,
+          },
+        ]}
+      >
         <View style={styles.row}>
           {state.routes
             .filter((route) => route.name !== "Profilo")
@@ -54,20 +55,22 @@ export default function GlassTabBar({ state, descriptors, navigation }: BottomTa
             const icon = ICONS[route.name] ?? "circle-outline";
 
             return (
-              <Pressable
-                key={route.key}
-                onPress={onPress}
-                style={[styles.item, isFocused && styles.itemActive]}
-              >
-                <MaterialCommunityIcons
+            <Pressable
+              key={route.key}
+              onPress={onPress}
+              style={[styles.item, isFocused && styles.itemActive]}
+            >
+              <MaterialCommunityIcons
                   name={icon}
-                  size={isFocused ? 24 : 22}
-                  color={isFocused ? theme.colors.primary : inactiveColor}
-                />
-                <Text
-                  variant="labelSmall"
-                  style={{ color: isFocused ? theme.colors.primary : inactiveColor }}
-                >
+                size={isFocused ? 24 : 22}
+                color={isFocused ? theme.colors.primary : inactiveColor}
+              />
+              <Text
+                variant="labelSmall"
+                style={{ color: isFocused ? theme.colors.primary : inactiveColor }}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                   {String(label)}
                 </Text>
               </Pressable>

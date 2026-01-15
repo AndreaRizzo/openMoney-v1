@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { LayoutAnimation, Platform, RefreshControl, ScrollView, StyleSheet, UIManager, View } from "react-native";
 import { Text } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -22,10 +22,50 @@ import CashflowOverviewCard from "@/ui/dashboard/components/CashflowOverviewCard
 import CategoriesBreakdownCard from "@/ui/dashboard/components/CategoriesBreakdownCard";
 import RecurrencesTableCard from "@/ui/dashboard/components/RecurrencesTableCard";
 import PremiumCard from "@/ui/dashboard/components/PremiumCard";
+import PressScale from "@/ui/dashboard/components/PressScale";
 import Skeleton from "@/ui/dashboard/components/Skeleton";
 
 type Nav = {
   navigate: (name: string, params?: Record<string, unknown>) => void;
+};
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+const SectionAccordion = ({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}): JSX.Element => {
+  const { tokens } = useDashboardTheme();
+  const [open, setOpen] = useState(false);
+  const toggle = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setOpen((prev) => !prev);
+  };
+  return (
+    <View style={styles.section}>
+      <PremiumCard>
+        <PressScale
+          style={[
+            styles.accordionHeader,
+            {
+              borderColor: tokens.colors.border,
+              backgroundColor: tokens.colors.surface2,
+            },
+          ]}
+          onPress={toggle}
+        >
+          <Text style={[styles.accordionTitle, { color: tokens.colors.text }]}>{title}</Text>
+          <Text style={[styles.accordionIcon, { color: tokens.colors.muted }]}>{open ? "−" : "+"}</Text>
+        </PressScale>
+        {open && <View style={styles.accordionContent}>{children}</View>}
+      </PremiumCard>
+    </View>
+  );
 };
 
 export default function DashboardScreen(): JSX.Element {
@@ -39,6 +79,7 @@ export default function DashboardScreen(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [prompted, setPrompted] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [profileName, setProfileName] = useState("");
 
   const load = useCallback(async () => {
     setError(null);
@@ -46,12 +87,13 @@ export default function DashboardScreen(): JSX.Element {
       const wallets = await listWallets(true);
       setWalletsCount(wallets.length);
 
-      const [snapshots, incomeEntries, expenseEntries, expenseCategories, pref] = await Promise.all([
+      const [snapshots, incomeEntries, expenseEntries, expenseCategories, pref, profile] = await Promise.all([
         listSnapshots(),
         listIncomeEntries(),
         listExpenseEntries(),
         listExpenseCategories(),
         getPreference("chart_points"),
+        getPreference("profile_name"),
       ]);
 
       const latestSnapshot = await getLatestSnapshot();
@@ -80,6 +122,7 @@ export default function DashboardScreen(): JSX.Element {
       setDashboard(data);
 
       const ask = await getPreference("ask_snapshot_on_start");
+      setProfileName(profile?.value?.trim() ?? "");
       if (!prompted && ask?.value === "true") {
         const today = todayIso();
         if (!latestSnapshot || latestSnapshot.date !== today) {
@@ -151,37 +194,45 @@ export default function DashboardScreen(): JSX.Element {
         {dashboard ? (
           <>
             <View style={styles.section}>
+              <Text style={[styles.greetingText, { color: tokens.colors.text }]}>
+                {profileName ? `Ciao, ${profileName}` : "Ciao"}
+              </Text>
+            </View>
+
+            <View style={styles.section}>
               <KPIStrip items={dashboard.kpis} />
             </View>
 
-            <View style={styles.section}>
-              <PortfolioLineChartCard data={dashboard.portfolioSeries} />
-            </View>
+            <SectionAccordion title="Il tuo andamento nel tempo">
+              <PortfolioLineChartCard data={dashboard.portfolioSeries} hideHeader noCard />
+            </SectionAccordion>
 
-            <View style={styles.section}>
-              <DonutDistributionCard items={dashboard.distributions} />
-            </View>
+            <SectionAccordion title="Distribuzione patrimonio">
+              <DonutDistributionCard items={dashboard.distributions} hideHeader noCard />
+            </SectionAccordion>
 
-            <View style={styles.section}>
-              <CashflowOverviewCard cashflow={dashboard.cashflow} />
-            </View>
+            <SectionAccordion title="Cash Flow. Panoramica">
+              <CashflowOverviewCard cashflow={dashboard.cashflow} hideHeader noCard />
+            </SectionAccordion>
 
-            <View style={styles.section}>
-              <CategoriesBreakdownCard items={dashboard.categories} />
-            </View>
+            <SectionAccordion title="Spese per categoria">
+              <CategoriesBreakdownCard items={dashboard.categories} hideHeader noCard />
+            </SectionAccordion>
 
-            <View style={styles.section}>
-                <RecurrencesTableCard
-                  rows={dashboard.recurrences}
-                  onPressRow={(row) =>
-                    navigation.navigate("Entrate/Uscite", {
-                      entryType: row.type,
-                      formMode: "edit",
-                      entryId: row.entryId,
-                    })
-                  }
-                />
-            </View>
+            <SectionAccordion title="Prossimi movimenti">
+              <RecurrencesTableCard
+                rows={dashboard.recurrences}
+                hideHeader
+                noCard
+                onPressRow={(row) =>
+                  navigation.navigate("Entrate/Uscite", {
+                    entryType: row.type,
+                    formMode: "edit",
+                    entryId: row.entryId,
+                  })
+                }
+              />
+            </SectionAccordion>
           </>
         ) : null}
       </ScrollView>
@@ -200,6 +251,32 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: 12,
+    marginTop: 5,
+  },
+  accordionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  accordionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  accordionIcon: {
+    fontSize: 24,
+  },
+  accordionContent: {
+    marginTop: 12,
+    gap: 16,
+  },
+  greetingText: {
+    fontSize: 34,
+    fontWeight: "700",
+    letterSpacing: 0.25,
   },
   emptyTitle: {
     fontSize: 18,
