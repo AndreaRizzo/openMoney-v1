@@ -195,8 +195,11 @@ export default function App(): JSX.Element {
                                         ]}
                                       />
                                     ),
-                                    headerRight: () => (
-                                      <ProfileButton isSettingsScreen={route.name === "Impostazioni"} />
+                                    headerLeft: () => (
+                                      <ProfileButton
+                                        isSettingsScreen={route.name === "Impostazioni"}
+                                        position="left"
+                                      />
                                     ),
                                     tabBarStyle: { display: "none" },
                                   })}
@@ -204,8 +207,8 @@ export default function App(): JSX.Element {
                                 >
                                   <Tab.Screen name="Dashboard" component={DashboardScreen} />
                                   <Tab.Screen name="Snapshot" component={SnapshotScreen} />
-                                  <Tab.Screen name="Entrate/Uscite" component={EntriesScreen} />
                                   <Tab.Screen name="Wallet" component={WalletScreen} />
+                                  <Tab.Screen name="Entrate/Uscite" component={EntriesScreen} />
                                   <Tab.Screen
                                     name="Impostazioni"
                                     component={SettingsScreen}

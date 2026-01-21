@@ -1,52 +1,151 @@
-# openMoney
-openMoney è un’applicazione mobile Expo/React Native che aiuta a visualizzare i flussi di cassa e i portafogli finanziari con layout moderni e chart interattivi.
+# OpenMoney
 
-## Stato e obiettivi
-- **Stack:** Expo SDK 54 con React Native 0.81, TypeScript, Victory per i grafici e react-native-paper per i componenti di UI.
-- **Ambiente:** il progetto gira su dispositivi iOS, Android e Web tramite Expo; è ottimizzato per essere eseguito localmente con `npm run start` o con `npm run android`/`npm run ios`.
-- **Obiettivo:** fornire dashboard finanziarie con grafici di andamento, riepiloghi e strumenti per monitorare risparmi e portafoglio.
+**OpenMoney** is an **open-source personal finance app** built with **React Native and Expo**, designed to give users full control over their financial data.  
+No subscriptions. No tracking. No cloud dependency. Your data stays on your device.
 
-## Prerequisiti
-1. Node.js 20.x (10.x) o successivo con npm 10+ (anche `corepack` è incluso con Node moderno).
-2. Expo CLI: `npm install -g expo-cli` (opzionale; `npm run start` funzionerà anche tramite `npx expo start`).
-3. Per le build native, avere Xcode (macOS/iOS) e Android Studio/SDK installati.
-4. `eas-cli` se vuoi usare Expo Application Services (EAS) per build o submissions: `npm install -g eas-cli`.
+The goal is simple:  
+👉 **all your personal finances in one place**, clearly, securely, and transparently.
 
-## Installazione
+---
+
+## Why OpenMoney exists
+
+Most personal finance apps today:
+
+- require recurring subscriptions
+- sync sensitive data to external servers
+- are not transparent about data usage
+- lock essential features behind paywalls
+
+**OpenMoney is the alternative**:
+
+- 🧠 **Offline-first**. Works fully without internet
+- 🔐 **Secure**. App lock with PIN and biometric authentication
+- ♻️ **Open source**. Anyone can inspect, audit, and improve the code
+- 💸 **Free forever**. No subscriptions, no hidden costs
+
+---
+
+## Key Features
+
+- 📊 Dashboard with liquidity, net worth, and investments overview
+- 💳 Accounts, wallets, and expense categories
+- 🔁 Recurring income and expenses
+- 📆 Transaction history and spending analysis
+- 🔐 App lock with **PIN** and **biometrics** (Face ID on iOS, system biometrics on Android)
+- 📱 Mobile-first UI for iOS and Android
+- 📴 Fully functional **offline**
+
+---
+
+## Tech Stack
+
+- **React Native**
+- **Expo**
+- **TypeScript**
+- **SQLite (local database)**
+- **expo-local-authentication** for biometrics
+- **Expo Go** for fast local development
+
+---
+
+## Getting Started (Local Development)
+
+### Prerequisites
+
+- Node.js ≥ 18
+- npm or yarn
+- Expo CLI
+- A physical device with **Expo Go** installed (iOS or Android)
+
+---
+
+### Installation
+
 ```bash
+git clone https://github.com/<your-org-or-username>/openMoney-v1.git
+cd openMoney-v1
 npm install
 ```
-Questo crea `node_modules/` e prepara il progetto Expo; i file generati (android/, ios/, .expo/) sono ignorati da Git.
 
-## Comandi utili
-- `npm run start`: avvia Metro (Expo Dev Tools) e serve app sui device/emulator.
-- `npm run android`: compila ed esegue la variante Android generata (richiede emulator o device).
-- `npm run ios`: compila ed esegue su simulatore iOS (richiede Xcode e un simulatore attivo).
-- `npm run web`: avvia la web app in modalità dev (puoi accedere da browser).
-- `eas build --profile production --platform all`: usa `eas.json` per buildare la release destinata allo store (configurazione `production` nella radice).
+---
 
-## Configurazione Git
-- La cartella `.expo/`, la dir `android/` e `ios/` sono `.gitignore` per evitare di committare asset generati.
-- Mantieni `node_modules/`, `dist/` e `build/` fuori da Git.
-- Includi sempre `app.json`, `package.json`, `tsconfig.json`, `eas.json` e i file sotto `src/`/`assets/` nel ramo principale.
+### Run the app with Expo Go
 
-## Struttura chiave
-- `App.tsx` e `index.ts` avviano il renderer Expo.
-- `src/ui/` contiene le schermate (`screens`) e i componenti (`components`), in particolare `dashboard` con i pannelli di flusso di cassa e grafici.
-- `assets/` ospita immagini e risorse statiche.
+```bash
+npm start
+```
 
-## Testing e qualità
-- Non esistono test automatici al momento, ma la configurazione Jest può essere estesa piazzando file sotto `__tests__/`.
-- Se aggiungi logica complessa, crea test `.test.ts` e usa `npm test` (che attualmente punta a Jest/Expo).
+- Scan the QR code using **Expo Go** on your phone
+- The app will run directly on your device
 
-## Contribuire
-1. Crea un branch a partire da `main`.
-2. Aggiungi modifiche e assicurati che `git status` includa solo i file voluti.
-3. `git add` + `git commit` con messaggi chiari.
-4. `git push` e apri PR/richiesta di fusione.
+👉 This is the recommended way to develop and contribute.
 
-## Expo Go stuck on Downloading
-Se Expo Go rimane bloccata su **Downloading…** anche dopo aver scansionato il QR, segui la lista di controllo di `docs/expo-go-downloading-fix.md`, che copre dalla verifica di rete e permessi alle modalità LAN/tunnel, porte alternative, cancellazione delle cache e l’esecuzione dello script `scripts/expo-preflight.sh`.
+---
 
-## Supporto
-Per dubbi su configurazione o deploy, scrivi sul canale team o apri issue in GitHub con log d’errore e passi per riprodurre.
+## Native Builds (Optional)
+
+For full native testing (e.g. biometrics on real devices):
+
+- **iOS**: build and run using **Xcode**
+- **Android**: build using **Android Studio** or **EAS**
+
+The project is already structured to support both platforms.
+
+---
+
+## Contributing
+
+OpenMoney is **open source** and contributions are welcome.
+
+You can contribute by:
+
+- 🐛 Reporting bugs
+- ✨ Proposing or implementing new features
+- 🧹 Improving code quality, UX, or performance
+- 📖 Improving documentation
+- 🔐 Reviewing security and privacy aspects
+
+### How to contribute
+
+1. Fork the repository
+2. Create a branch from `main`
+3. Make your changes
+4. Open a Pull Request with a clear description
+
+---
+
+## Contribution Guidelines
+
+- Keep the code **clean and well-typed**
+- Avoid unnecessary dependencies
+- Privacy and security come first
+- Features must work **offline by default**
+
+---
+
+## Privacy & Security
+
+- No data is sent to external servers
+- No analytics or tracking
+- Local authentication via PIN or biometrics
+- All data stays **on the user’s device**
+
+---
+
+## License
+
+This project is released under the **MIT License**.  
+You are free to use, modify, and distribute it.
+
+---
+
+## Project Status
+
+🟢 **MVP nearly complete**
+
+OpenMoney is currently in the stabilization phase, preparing for release on the App Store and Google Play Store.
+
+---
+
+If you want to help shape the future of personal finance apps, you are welcome to contribute.

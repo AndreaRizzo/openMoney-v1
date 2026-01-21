@@ -7,9 +7,15 @@ import { useDashboardTheme } from "@/ui/dashboard/theme";
 
 const BUTTON_SIZE = 36;
 
-type Props = { isSettingsScreen?: boolean };
+type Props = {
+  isSettingsScreen?: boolean;
+  position?: "left" | "right";
+};
 
-export default function ProfileButton({ isSettingsScreen }: Props): JSX.Element {
+export default function ProfileButton({
+  isSettingsScreen,
+  position = "right",
+}: Props): JSX.Element {
   const navigation = useNavigation();
   const { tokens } = useDashboardTheme();
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
@@ -31,18 +37,19 @@ export default function ProfileButton({ isSettingsScreen }: Props): JSX.Element 
 
   return (
     <Pressable
-      onPress={handlePress}
-      style={({ pressed }) => [
-        styles.button,
-        {
-          backgroundColor: tokens.colors.surface,
-        },
-        pressed && styles.pressed,
-      ]}
-      hitSlop={{ top: 12, right: 12, bottom: 12, left: 12 }}
-      accessibilityRole="button"
-      accessibilityLabel="Apri profilo"
-    >
+        onPress={handlePress}
+        style={({ pressed }) => [
+          styles.button,
+          position === "left" ? styles.marginLeft : styles.marginRight,
+          {
+            backgroundColor: tokens.colors.surface,
+          },
+          pressed && styles.pressed,
+        ]}
+        hitSlop={{ top: 12, right: 12, bottom: 12, left: 12 }}
+        accessibilityRole="button"
+        accessibilityLabel="Apri profilo"
+      >
       {avatarUri ? (
         <Image source={{ uri: avatarUri }} style={styles.avatar} />
       ) : (
@@ -60,7 +67,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
+  },
+  marginRight: {
     marginRight: 18,
+  },
+  marginLeft: {
+    marginLeft: 18,
   },
   pressed: {
     opacity: 0.7,

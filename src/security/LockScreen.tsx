@@ -20,6 +20,7 @@ import type { SecurityConfig } from "./securityTypes";
 import PinDots from "./components/PinDots";
 import NumberPad from "./components/NumberPad";
 import FaceIdChip from "./components/FaceIdChip";
+import { getBiometryName, getBiometryUnlockCtaLabel } from "./biometryCopy";
 import { authenticateForUnlock, getBiometryHardwareInfo } from "./securityBiometry";
 
 type LockScreenProps = {
@@ -158,7 +159,7 @@ export default function LockScreen({ config, onAuthenticated, style }: LockScree
         if (!silent) {
           const message =
             error === "lockout"
-              ? "Face ID bloccato per troppi tentativi, usa il codice."
+              ? `${getBiometryName()} bloccato per troppi tentativi, usa il codice.`
               : "Autenticazione biometrica fallita";
           setError(message);
         }
@@ -272,7 +273,7 @@ export default function LockScreen({ config, onAuthenticated, style }: LockScree
         <Text style={styles.inputLabel}>Inserisci codice</Text>
         <PinDots length={4} filled={pin.length} color={tintColor} style={styles.pinDots} />
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        <Text style={styles.hintText}>Puoi attivare Face ID dalle impostazioni</Text>
+        <Text style={styles.hintText}>{`Puoi attivare ${getBiometryName()} dalle impostazioni`}</Text>
         <NumberPad
           onPressDigit={handleDigitPress}
           onBackspace={(clearAll) => (clearAll ? handleClearAll() : handleBackspace())}
@@ -296,14 +297,14 @@ export default function LockScreen({ config, onAuthenticated, style }: LockScree
             disabled={!shouldShowFaceId}
             style={[styles.bottomAction, styles.bottomRight]}
           >
-            <Text
-              style={[
-                styles.bottomText,
-                !shouldShowFaceId && styles.bottomTextDisabled,
-              ]}
-            >
-              Usa Face ID
-            </Text>
+              <Text
+                style={[
+                  styles.bottomText,
+                  !shouldShowFaceId && styles.bottomTextDisabled,
+                ]}
+              >
+                {getBiometryUnlockCtaLabel()}
+              </Text>
           </Pressable>
         </View>
       </Animated.View>
@@ -337,7 +338,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   hintText: {
-    fontSize: 15,
+    fontSize: 13,
     textAlign: "center",
     color: "#F0EEFA",
     opacity: 0.92,

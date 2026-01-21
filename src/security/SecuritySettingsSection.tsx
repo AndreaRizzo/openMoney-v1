@@ -4,6 +4,7 @@ import { Switch } from "react-native-paper";
 import PremiumCard from "@/ui/dashboard/components/PremiumCard";
 import SectionHeader from "@/ui/dashboard/components/SectionHeader";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
+import { getBiometryToggleLabel } from "./biometryCopy";
 
 type Props = {
   securityEnabled: boolean;
@@ -62,7 +63,7 @@ export default function SecuritySettingsSection({
               disabled={!securityEnabled}
             />
             <Text style={[styles.label, { color: securityEnabled ? tokens.colors.text : tokens.colors.muted }]}>
-              Usa Face ID
+              {getBiometryToggleLabel()}
             </Text>
           </View>
         ) : null}
