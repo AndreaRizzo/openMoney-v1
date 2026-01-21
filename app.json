@@ -15,7 +15,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.openmoney.app",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Usiamo Face ID per proteggere l’accesso a OpenMoney."
+      }
     },
     "android": {
       "package": "com.openmoney.app",

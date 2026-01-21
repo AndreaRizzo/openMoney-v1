@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  AppState,
+  type AppStateStatus,
   Animated,
   Keyboard,
   Pressable,
@@ -11,7 +13,6 @@ import {
 } from "react-native";
 import { BlurView } from "expo-blur";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as LocalAuthentication from "expo-local-authentication";
 import * as Haptics from "expo-haptics";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
 import { hashPin } from "./securityHash";
@@ -19,6 +20,7 @@ import type { SecurityConfig } from "./securityTypes";
 import PinDots from "./components/PinDots";
 import NumberPad from "./components/NumberPad";
 import FaceIdChip from "./components/FaceIdChip";
+import { authenticateForUnlock, getBiometryHardwareInfo } from "./securityBiometry";
 
 type LockScreenProps = {
   config: SecurityConfig;
@@ -117,49 +119,58 @@ export default function LockScreen({ config, onAuthenticated, style }: LockScree
     setPin((prev) => prev.slice(0, -1));
   }, [busy]);
 
-  const handleClearAll = useCallback(() => {
-    if (busy) return;
-    setPin("");
-  }, [busy]);
+  const authInProgressRef = useRef(false);
+  const authDelayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const appStateRef = useRef<AppStateStatus>(AppState.currentState ?? "active");
 
   const runBiometry = useCallback(
     async (options?: { silent?: boolean }) => {
       if (!config.biometryEnabled) return false;
+      if (authInProgressRef.current) {
+        console.log("[FaceID] Authentication attempt skipped because another attempt is in progress");
+        return false;
+      }
+      if (appStateRef.current !== "active") {
+        console.log(`[FaceID] Authentication attempt skipped because app state is ${appStateRef.current}`);
+        return false;
+      }
       const silent = options?.silent ?? false;
       if (!silent) {
         setBusy(true);
         setError(null);
       }
+      authInProgressRef.current = true;
       try {
-        const hasHardware = await LocalAuthentication.hasHardwareAsync();
-        const hasEnrolled = await LocalAuthentication.isEnrolledAsync();
-        if (!hasHardware || !hasEnrolled) {
+        const info = await getBiometryHardwareInfo();
+        if (!info.hasHardware || !info.hasEnrolled) {
           if (!silent) {
             setError("Autenticazione biometrica non disponibile");
           }
+          setBiometryAvailable(false);
           return false;
         }
-        const result = await LocalAuthentication.authenticateAsync({
-          promptMessage: "Sblocca OpenMoney",
-          cancelLabel: "Annulla",
-          disableDeviceFallback: true,
-          fallbackLabel: "",
-        });
-        if (result.success) {
+        const { success, error } = await authenticateForUnlock();
+        if (success) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           onAuthenticated();
           return true;
         }
         if (!silent) {
-          setError("Autenticazione biometrica fallita");
+          const message =
+            error === "lockout"
+              ? "Face ID bloccato per troppi tentativi, usa il codice."
+              : "Autenticazione biometrica fallita";
+          setError(message);
         }
         return false;
-      } catch {
+      } catch (error) {
+        console.log("[FaceID] runBiometry exception", error);
         if (!silent) {
           setError("Errore durante l'autenticazione biometrica");
         }
         return false;
       } finally {
+        authInProgressRef.current = false;
         if (!silent) {
           setBusy(false);
         }
@@ -168,38 +179,78 @@ export default function LockScreen({ config, onAuthenticated, style }: LockScree
     [config.biometryEnabled, onAuthenticated]
   );
 
+  const scheduleBiometry = useCallback(
+    (options?: { silent?: boolean }) => {
+      if (!config.biometryEnabled) {
+        console.log("[FaceID] schedule skipped because biometry is disabled");
+        return;
+      }
+      if (appStateRef.current !== "active") {
+        console.log(`[FaceID] schedule skipped because app state is ${appStateRef.current}`);
+        return;
+      }
+      if (authDelayTimerRef.current) {
+        clearTimeout(authDelayTimerRef.current);
+      }
+      authDelayTimerRef.current = setTimeout(() => {
+        authDelayTimerRef.current = null;
+        void runBiometry(options);
+      }, 300);
+    },
+    [config.biometryEnabled, runBiometry]
+  );
+
   const handleBiometry = useCallback(() => {
-    runBiometry();
-  }, [runBiometry]);
+    scheduleBiometry({ silent: false });
+  }, [scheduleBiometry]);
 
   useEffect(() => {
     let active = true;
     if (!config.biometryEnabled) {
+      if (authDelayTimerRef.current) {
+        clearTimeout(authDelayTimerRef.current);
+        authDelayTimerRef.current = null;
+      }
       setBiometryAvailable(false);
       setAutoBiometryTried(false);
-      return;
+      return () => {
+        active = false;
+      };
     }
     (async () => {
-      const hasHardware = await LocalAuthentication.hasHardwareAsync();
-      const hasEnrolled = await LocalAuthentication.isEnrolledAsync();
+      const info = await getBiometryHardwareInfo();
       if (!active) return;
-      const available = hasHardware && hasEnrolled;
+      const available = info.hasHardware && info.hasEnrolled;
       setBiometryAvailable(available);
       if (available && !autoBiometryTried) {
         setAutoBiometryTried(true);
-        runBiometry({ silent: true });
+        scheduleBiometry({ silent: true });
       }
     })();
     return () => {
       active = false;
     };
-  }, [autoBiometryTried, config.biometryEnabled, runBiometry]);
+  }, [autoBiometryTried, config.biometryEnabled, scheduleBiometry]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      appStateRef.current = nextState;
+      if (nextState === "active" && config.biometryEnabled) {
+        setAutoBiometryTried(false);
+      }
+    });
+    return () => subscription.remove();
+  }, [config.biometryEnabled]);
 
   useEffect(() => {
     return () => {
       if (resetTimer.current) {
         clearTimeout(resetTimer.current);
         resetTimer.current = null;
+      }
+      if (authDelayTimerRef.current) {
+        clearTimeout(authDelayTimerRef.current);
+        authDelayTimerRef.current = null;
       }
     };
   }, []);
