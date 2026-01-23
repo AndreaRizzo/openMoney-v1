@@ -31,6 +31,7 @@ import VerifyPinModal from "@/security/modals/VerifyPinModal";
 import { getSecurityConfig } from "@/security/securityStorage";
 import type { SecurityModalStackParamList } from "@/security/securityFlowsTypes";
 import { initI18n } from "@/i18n";
+import { SettingsProvider } from "@/settings/useSettings";
 
 enableScreens(false);
 
@@ -181,74 +182,76 @@ export default function App(): JSX.Element {
           <View style={{ flex: 1 }}>
             <SecurityGate>
               <DashboardThemeProvider isDark={paperTheme.dark}>
-                <AppBackground>
-                  <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
-                  {!ready ? (
-                    <AppBootScreen status="loading" />
-                  ) : error ? (
-                    <AppBootScreen status="error" error={error} onRetry={retry} />
-                  ) : (
-                    <OnboardingFlowProvider value={{ requestReplay: requestManualOnboarding }}>
-                      <NavigationContainer theme={navTheme}>
-                        <RootStack.Navigator screenOptions={{ headerShown: false }}>
-                          <RootStack.Screen name="MainContent">
-                            {() =>
-                              !onboardingCompleted || manualOnboarding ? (
-                                <OnboardingNavigator
-                                  onComplete={handleOnboardingComplete}
-                                  shouldSeedOnComplete={!manualOnboarding}
-                                />
-                              ) : (
-                                <Tab.Navigator
-                                  screenOptions={({ route }) => ({
-                                    headerTitleAlign: "center",
-                                    headerTransparent: true,
-                                    headerBackground: () => (
-                                      <BlurView
-                                        intensity={35}
-                                        tint={headerBlurTint}
-                                        style={[
-                                          StyleSheet.absoluteFill,
-                                          {
-                                            borderBottomWidth: 1,
-                                            borderBottomColor: headerBorder,
-                                            backgroundColor: headerOverlay,
-                                          },
-                                        ]}
-                                      />
-                                    ),
-                                    headerLeft: () => (
-                                      <ProfileButton
-                                        isSettingsScreen={route.name === "Impostazioni"}
-                                        position="left"
-                                      />
-                                    ),
-                                    tabBarStyle: { display: "none" },
-                                  })}
-                                  tabBar={(props) => <GlassTabBar {...props} />}
-                                >
-                                  <Tab.Screen name="Dashboard" component={DashboardScreen} />
-                                  <Tab.Screen name="Snapshot" component={SnapshotScreen} />
-                                  <Tab.Screen name="Wallet" component={WalletScreen} />
-                                  <Tab.Screen name="Entrate/Uscite" component={EntriesScreen} />
-                                  <Tab.Screen
-                                    name="Impostazioni"
-                                    component={SettingsScreen}
-                                    options={{ tabBarButton: () => null }}
+                <SettingsProvider>
+                  <AppBackground>
+                    <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
+                    {!ready ? (
+                      <AppBootScreen status="loading" />
+                    ) : error ? (
+                      <AppBootScreen status="error" error={error} onRetry={retry} />
+                    ) : (
+                      <OnboardingFlowProvider value={{ requestReplay: requestManualOnboarding }}>
+                        <NavigationContainer theme={navTheme}>
+                          <RootStack.Navigator screenOptions={{ headerShown: false }}>
+                            <RootStack.Screen name="MainContent">
+                              {() =>
+                                !onboardingCompleted || manualOnboarding ? (
+                                  <OnboardingNavigator
+                                    onComplete={handleOnboardingComplete}
+                                    shouldSeedOnComplete={!manualOnboarding}
                                   />
-                                </Tab.Navigator>
-                              )
-                            }
-                          </RootStack.Screen>
-                          <RootStack.Group screenOptions={{ presentation: "modal", headerShown: false }}>
-                            <RootStack.Screen name="SetPinModal" component={SetPinModal} />
-                            <RootStack.Screen name="VerifyPinModal" component={VerifyPinModal} />
-                          </RootStack.Group>
-                        </RootStack.Navigator>
-                      </NavigationContainer>
-                    </OnboardingFlowProvider>
-                  )}
-                </AppBackground>
+                                ) : (
+                                  <Tab.Navigator
+                                    screenOptions={({ route }) => ({
+                                      headerTitleAlign: "center",
+                                      headerTransparent: true,
+                                      headerBackground: () => (
+                                        <BlurView
+                                          intensity={35}
+                                          tint={headerBlurTint}
+                                          style={[
+                                            StyleSheet.absoluteFill,
+                                            {
+                                              borderBottomWidth: 1,
+                                              borderBottomColor: headerBorder,
+                                              backgroundColor: headerOverlay,
+                                            },
+                                          ]}
+                                        />
+                                      ),
+                                      headerLeft: () => (
+                                        <ProfileButton
+                                          isSettingsScreen={route.name === "Impostazioni"}
+                                          position="left"
+                                        />
+                                      ),
+                                      tabBarStyle: { display: "none" },
+                                    })}
+                                    tabBar={(props) => <GlassTabBar {...props} />}
+                                  >
+                                    <Tab.Screen name="Dashboard" component={DashboardScreen} />
+                                    <Tab.Screen name="Snapshot" component={SnapshotScreen} />
+                                    <Tab.Screen name="Wallet" component={WalletScreen} />
+                                    <Tab.Screen name="Entrate/Uscite" component={EntriesScreen} />
+                                    <Tab.Screen
+                                      name="Impostazioni"
+                                      component={SettingsScreen}
+                                      options={{ tabBarButton: () => null }}
+                                    />
+                                  </Tab.Navigator>
+                                )
+                              }
+                            </RootStack.Screen>
+                            <RootStack.Group screenOptions={{ presentation: "modal", headerShown: false }}>
+                              <RootStack.Screen name="SetPinModal" component={SetPinModal} />
+                              <RootStack.Screen name="VerifyPinModal" component={VerifyPinModal} />
+                            </RootStack.Group>
+                          </RootStack.Navigator>
+                        </NavigationContainer>
+                      </OnboardingFlowProvider>
+                    )}
+                  </AppBackground>
+                </SettingsProvider>
               </DashboardThemeProvider>
             </SecurityGate>
             <AnimatedSplashOverlay

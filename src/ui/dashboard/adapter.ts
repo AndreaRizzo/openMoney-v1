@@ -83,7 +83,11 @@ function buildPortfolioSeries(
   return points;
 }
 
-function buildKpis(latestLines: SnapshotLineDetail[], portfolio: PortfolioPoint[]): KPIItem[] {
+function buildKpis(
+  latestLines: SnapshotLineDetail[],
+  portfolio: PortfolioPoint[],
+  showInvestments = true
+): KPIItem[] {
   const totals = totalsByWalletType(latestLines);
   const last = portfolio[portfolio.length - 1];
   const prev = portfolio[portfolio.length - 2];
@@ -100,35 +104,39 @@ function buildKpis(latestLines: SnapshotLineDetail[], portfolio: PortfolioPoint[
   const investBreakdown = toBreakdown(latestLines.filter((line) => line.wallet_type === "INVEST"));
   const netWorthBreakdown = toBreakdown(latestLines);
 
-  return [
-    {
-      id: "liquidity",
-      label: i18n.t("dashboard.kpi.liquidity"),
-      value: totals.liquidity,
-      deltaValue: deltaLiquidity,
-      deltaPct: pct(deltaLiquidity, prev?.liquidity ?? 0),
-      accent: palette[0],
-      breakdown: liquidityBreakdown,
-    },
-    {
-      id: "investments",
-      label: i18n.t("dashboard.kpi.investments"),
-      value: totals.investments,
-      deltaValue: deltaInvest,
-      deltaPct: pct(deltaInvest, prev?.investments ?? 0),
-      accent: palette[1],
-      breakdown: investBreakdown,
-    },
-    {
-      id: "netWorth",
-      label: i18n.t("dashboard.kpi.netWorth"),
-      value: totals.netWorth,
-      deltaValue: deltaTotal,
-      deltaPct: pct(deltaTotal, prev?.total ?? 0),
-      accent: palette[3],
-      breakdown: netWorthBreakdown,
-    },
-  ];
+  const liquidityItem: KPIItem = {
+    id: "liquidity",
+    label: i18n.t("dashboard.kpi.liquidity"),
+    value: totals.liquidity,
+    deltaValue: deltaLiquidity,
+    deltaPct: pct(deltaLiquidity, prev?.liquidity ?? 0),
+    accent: palette[0],
+    breakdown: liquidityBreakdown,
+  };
+  const investItem: KPIItem = {
+    id: "investments",
+    label: i18n.t("dashboard.kpi.investments"),
+    value: totals.investments,
+    deltaValue: deltaInvest,
+    deltaPct: pct(deltaInvest, prev?.investments ?? 0),
+    accent: palette[1],
+    breakdown: investBreakdown,
+  };
+  const netWorthItem: KPIItem = {
+    id: "netWorth",
+    label: i18n.t("dashboard.kpi.netWorth"),
+    value: totals.netWorth,
+    deltaValue: deltaTotal,
+    deltaPct: pct(deltaTotal, prev?.total ?? 0),
+    accent: palette[3],
+    breakdown: netWorthBreakdown,
+  };
+
+  const items: KPIItem[] = [liquidityItem];
+  if (showInvestments) {
+    items.push(investItem, netWorthItem);
+  }
+  return items;
 }
 
 function buildDistribution(latestLines: SnapshotLineDetail[]): DistributionItem[] {
@@ -234,14 +242,14 @@ function buildRecurrences(
   });
 }
 
-export function buildDashboardData(input: DashboardInput): DashboardData {
+export function buildDashboardData(input: DashboardInput, showInvestments = true): DashboardData {
   const portfolio = buildPortfolioSeries(
     input.snapshots,
     input.snapshotLines,
     input.latestLines,
     input.chartPoints
   );
-  const kpis = buildKpis(input.latestLines, portfolio);
+  const kpis = buildKpis(input.latestLines, portfolio, showInvestments);
   const distributions = buildDistribution(input.latestLines);
   const cashflowMonths = buildCashflow(input.incomeEntries, input.expenseEntries);
   const averages = averageMonthlyTotals(
@@ -266,12 +274,13 @@ export function buildDashboardData(input: DashboardInput): DashboardData {
   };
 }
 
-export function createMockDashboardData(): DashboardData {
-  const kpis: KPIItem[] = [
+export function createMockDashboardData(showInvestments = true): DashboardData {
+  const baseKpis: KPIItem[] = [
     { id: "liquidity", label: i18n.t("dashboard.mock.kpi.liquidity"), value: 16450, deltaValue: 420, deltaPct: 0.026 },
     { id: "investments", label: i18n.t("dashboard.mock.kpi.investments"), value: 32800, deltaValue: -620, deltaPct: -0.018 },
     { id: "netWorth", label: i18n.t("dashboard.mock.kpi.netWorth"), value: 49250, deltaValue: -200, deltaPct: -0.004 },
   ];
+  const kpis = showInvestments ? baseKpis : baseKpis.filter((item) => item.id === "liquidity");
   const portfolioSeries: PortfolioPoint[] = [
     { date: "2024-11-01", total: 46800, liquidity: 15800, investments: 31000 },
     { date: "2024-12-01", total: 47200, liquidity: 16050, investments: 31150 },

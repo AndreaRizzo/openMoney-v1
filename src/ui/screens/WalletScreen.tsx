@@ -19,6 +19,7 @@ import type { Wallet, Currency, ExpenseCategory } from "@/repositories/types";
 import { APP_VARIANT, LIMITS } from "@/config/entitlements";
 import { openProStoreLink } from "@/config/storeLinks";
 import { useTranslation } from "react-i18next";
+import { useSettings } from "@/settings/useSettings";
 
 type CategoryEdit = {
   name: string;
@@ -50,6 +51,7 @@ export default function WalletScreen(): JSX.Element {
   const headerHeight = useHeaderHeight();
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const { t } = useTranslation();
+  const { showInvestments } = useSettings();
   const [walletEdits, setWalletEdits] = useState<Record<number, { name: string; tag: string; currency: Currency }>>({});
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [categoryEdits, setCategoryEdits] = useState<Record<number, CategoryEdit>>({});
@@ -70,6 +72,12 @@ export default function WalletScreen(): JSX.Element {
   const [refreshing, setRefreshing] = useState(false);
   const [limitDialogVisible, setLimitDialogVisible] = useState(false);
   const [storeErrorVisible, setStoreErrorVisible] = useState(false);
+  useEffect(() => {
+    if (!showInvestments) {
+      setTab("LIQUIDITY");
+      setShowAddWallet((prev) => ({ ...prev, INVEST: false }));
+    }
+  }, [showInvestments]);
 
   const load = useCallback(async () => {
     const [walletList, expenseCats] = await Promise.all([listWallets(), listExpenseCategories()]);
@@ -212,15 +220,17 @@ export default function WalletScreen(): JSX.Element {
       >
         <PremiumCard>
           <View style={styles.sectionContent}>
-            <SegmentedButtons
-              value={tab}
-              onValueChange={(value) => setTab(value as "LIQUIDITY" | "INVEST")}
-              buttons={[
-                { value: "LIQUIDITY", label: t("wallets.list.tabLiquidity") },
-                { value: "INVEST", label: t("wallets.list.tabInvest") },
-              ]}
-              style={{ backgroundColor: tokens.colors.surface2 }}
-            />
+            {showInvestments && (
+              <SegmentedButtons
+                value={tab}
+                onValueChange={(value) => setTab(value as "LIQUIDITY" | "INVEST")}
+                buttons={[
+                  { value: "LIQUIDITY", label: t("wallets.list.tabLiquidity") },
+                  { value: "INVEST", label: t("wallets.list.tabInvest") },
+                ]}
+                style={{ backgroundColor: tokens.colors.surface2 }}
+              />
+            )}
 
             {tab === "LIQUIDITY" && (
               <>
@@ -339,7 +349,7 @@ export default function WalletScreen(): JSX.Element {
               </>
             )}
 
-            {tab === "INVEST" && (
+            {showInvestments && tab === "INVEST" && (
               <>
                 {!showAddWallet.INVEST && (
                   <Button mode="contained" buttonColor={tokens.colors.accent} onPress={() => handleRequestAddWallet("INVEST")}>

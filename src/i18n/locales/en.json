@@ -54,6 +54,7 @@
       "title": "Preferences",
       "darkTheme": "Dark theme",
       "prefillSnapshot": "Prefill snapshot",
+      "showInvestments": "Show investments",
       "monthsInChart": "Months in chart",
       "languageLabel": "Language",
       "language": {

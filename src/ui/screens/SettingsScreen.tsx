@@ -38,6 +38,7 @@ import { handleBiometryToggle as handleBiometryToggleFlow } from "@/security/sec
 import type { SecurityModalStackParamList } from "@/security/securityFlowsTypes";
 import { useTranslation } from "react-i18next";
 import { STORAGE_KEY, SupportedLanguage } from "@/i18n";
+import { useSettings } from "@/settings/useSettings";
 
 function findSecurityModalNavigation(
   navigation: NavigationProp<ParamListBase>
@@ -74,6 +75,7 @@ export default function SettingsScreen(): JSX.Element {
   const [refreshing, setRefreshing] = useState(false);
   const { requestReplay } = useOnboardingFlow();
   const { t, i18n } = useTranslation();
+  const { showInvestments, setShowInvestments } = useSettings();
 
   const currentLanguage = (i18n.resolvedLanguage ?? i18n.language ?? "it") as SupportedLanguage;
 
@@ -383,6 +385,16 @@ export default function SettingsScreen(): JSX.Element {
                 }}
               />
               <Text style={{ color: tokens.colors.text }}>{t("settings.preferences.prefillSnapshot")}</Text>
+            </View>
+            <View style={styles.row}>
+              <Switch
+                value={showInvestments}
+                onValueChange={(value) => {
+                  void setShowInvestments(value);
+                }}
+                color={tokens.colors.accent}
+              />
+              <Text style={{ color: tokens.colors.text }}>{t("settings.preferences.showInvestments")}</Text>
             </View>
             <View style={[styles.row, { gap: 12, marginTop: 8 }]}>
               <Text style={{ color: tokens.colors.text }}>{t("settings.preferences.monthsInChart")}</Text>

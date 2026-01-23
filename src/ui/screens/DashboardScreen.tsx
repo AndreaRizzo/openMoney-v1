@@ -25,6 +25,7 @@ import PremiumCard from "@/ui/dashboard/components/PremiumCard";
 import PressScale from "@/ui/dashboard/components/PressScale";
 import Skeleton from "@/ui/dashboard/components/Skeleton";
 import { useTranslation } from "react-i18next";
+import { useSettings } from "@/settings/useSettings";
 
 type Nav = {
   navigate: (name: string, params?: Record<string, unknown>) => void;
@@ -93,6 +94,7 @@ export default function DashboardScreen(): JSX.Element {
   const [sectionStates, setSectionStates] = useState<Record<string, boolean>>(DEFAULT_SECTION_STATES);
   const [sectionsLoaded, setSectionsLoaded] = useState(false);
   const { t } = useTranslation();
+  const { showInvestments } = useSettings();
 
   const load = useCallback(async () => {
     setError(null);
@@ -124,15 +126,18 @@ export default function DashboardScreen(): JSX.Element {
 
       const chartPointsRaw = pref ? Number(pref.value) : 6;
       const chartPoints = Number.isFinite(chartPointsRaw) ? Math.min(12, Math.max(3, chartPointsRaw)) : 6;
-      const data = buildDashboardData({
-        latestLines,
-        snapshots,
-        snapshotLines,
-        incomeEntries,
-        expenseEntries,
-        expenseCategories,
-        chartPoints,
-      });
+      const data = buildDashboardData(
+        {
+          latestLines,
+          snapshots,
+          snapshotLines,
+          incomeEntries,
+          expenseEntries,
+          expenseCategories,
+          chartPoints,
+        },
+        showInvestments
+      );
       setDashboard(data);
 
       const ask = await getPreference("ask_snapshot_on_start");
@@ -147,9 +152,9 @@ export default function DashboardScreen(): JSX.Element {
 
     } catch (err) {
       setError(err instanceof Error ? err.message : "Errore durante il caricamento.");
-      setDashboard(createMockDashboardData());
+      setDashboard(createMockDashboardData(showInvestments));
     }
-  }, [navigation, prompted]);
+  }, [navigation, prompted, showInvestments]);
 
   useEffect(() => {
     let canceled = false;
