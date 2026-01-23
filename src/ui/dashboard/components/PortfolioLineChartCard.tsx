@@ -15,6 +15,7 @@ import SectionHeader from "@/ui/dashboard/components/SectionHeader";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
 import { formatCompact, formatEUR, formatMonthLabel } from "@/ui/dashboard/formatters";
 import type { PortfolioPoint } from "@/ui/dashboard/types";
+import { useTranslation } from "react-i18next";
 
 type Mode = "total" | "liquidity" | "investments";
 
@@ -26,6 +27,7 @@ type Props = {
 
 export default function PortfolioLineChartCard({ data, hideHeader = false, noCard = false }: Props): JSX.Element {
   const { tokens } = useDashboardTheme();
+  const { t } = useTranslation();
   const [mode, setMode] = useState<Mode>("total");
   const { width } = useWindowDimensions();
 
@@ -47,10 +49,15 @@ export default function PortfolioLineChartCard({ data, hideHeader = false, noCar
 
   const content = (
     <>
-      {!hideHeader && <SectionHeader title="Il tuo andamento nel tempo" />}
+      {!hideHeader && <SectionHeader title={t("dashboard.portfolio.header")} />}
       <View style={styles.toggleRow}>
         {(["total", "liquidity", "investments"] as Mode[]).map((item) => {
-          const label = item === "total" ? "Totale" : item === "liquidity" ? "Liquidità" : "Investimenti";
+          const label =
+            item === "total"
+              ? t("dashboard.portfolio.toggle.total")
+              : item === "liquidity"
+                ? t("dashboard.portfolio.toggle.liquidity")
+                : t("dashboard.portfolio.toggle.investments");
           const active = item === mode;
           return (
             <PressScale
@@ -78,7 +85,7 @@ export default function PortfolioLineChartCard({ data, hideHeader = false, noCar
         })}
       </View>
       {chartData.length === 0 ? (
-        <Text style={[styles.empty, { color: tokens.colors.muted }]}>Nessun dato disponibile.</Text>
+        <Text style={[styles.empty, { color: tokens.colors.muted }]}>{t("dashboard.portfolio.empty")}</Text>
       ) : (
         <ScrollView
           horizontal

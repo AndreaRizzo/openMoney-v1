@@ -133,3 +133,20 @@ export function generateOccurrences(
 
   return results;
 }
+
+type FrequencyKeys = {
+  [K in Frequency]: `recurrences.frequency.${Lowercase<K>}`;
+};
+
+const FREQUENCY_KEYS: FrequencyKeys = {
+  WEEKLY: "recurrences.frequency.weekly",
+  MONTHLY: "recurrences.frequency.monthly",
+  YEARLY: "recurrences.frequency.yearly",
+};
+
+export function getFrequencyKey(frequency: Frequency | null | undefined): string | null {
+  if (!frequency) {
+    return null;
+  }
+  return FREQUENCY_KEYS[frequency];
+}

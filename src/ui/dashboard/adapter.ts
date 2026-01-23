@@ -2,7 +2,8 @@ import { breakdownByWallet, totalsByWalletType } from "@/domain/calculations";
 import { averageMonthlyTotals, totalsForMonth } from "@/domain/finance";
 import { listOccurrencesInRange, upcomingOccurrences } from "@/domain/recurrence";
 import type { ExpenseCategory, ExpenseEntry, IncomeEntry, Snapshot, SnapshotLineDetail } from "@/repositories/types";
-import { addDays } from "@/utils/recurrence";
+import { addDays, getFrequencyKey } from "@/utils/recurrence";
+import i18n from "i18next";
 import type {
   CashflowMonth,
   CashflowSummary,
@@ -102,7 +103,7 @@ function buildKpis(latestLines: SnapshotLineDetail[], portfolio: PortfolioPoint[
   return [
     {
       id: "liquidity",
-      label: "Liquidità",
+      label: i18n.t("dashboard.kpi.liquidity"),
       value: totals.liquidity,
       deltaValue: deltaLiquidity,
       deltaPct: pct(deltaLiquidity, prev?.liquidity ?? 0),
@@ -111,7 +112,7 @@ function buildKpis(latestLines: SnapshotLineDetail[], portfolio: PortfolioPoint[
     },
     {
       id: "investments",
-      label: "Investimenti",
+      label: i18n.t("dashboard.kpi.investments"),
       value: totals.investments,
       deltaValue: deltaInvest,
       deltaPct: pct(deltaInvest, prev?.investments ?? 0),
@@ -120,7 +121,7 @@ function buildKpis(latestLines: SnapshotLineDetail[], portfolio: PortfolioPoint[
     },
     {
       id: "netWorth",
-      label: "Patrimonio",
+      label: i18n.t("dashboard.kpi.netWorth"),
       value: totals.netWorth,
       deltaValue: deltaTotal,
       deltaPct: pct(deltaTotal, prev?.total ?? 0),
@@ -184,7 +185,7 @@ function buildCategories(expense: ExpenseEntry[], categories: ExpenseCategory[])
   return Array.from(totals.entries())
     .map(([categoryId, value], index) => {
       const info = categoryMap.get(categoryId);
-      const label = info?.label ?? "Senza categoria";
+      const label = info?.label ?? i18n.t("dashboard.categories.uncategorized");
       return {
         id: `${label}-${index}`,
         label,
@@ -214,7 +215,10 @@ function buildRecurrences(
       occurrence.type === "expense"
         ? categoryMap.get((entry as ExpenseEntry | undefined)?.expense_category_id ?? -1)
         : null;
-    const category = occurrence.type === "expense" ? info?.label ?? "Spesa" : "Entrata";
+    const expenseFallback = i18n.t("dashboard.recurrences.category.expense");
+    const incomeFallback = i18n.t("dashboard.recurrences.category.income");
+    const category = occurrence.type === "expense" ? info?.label ?? expenseFallback : incomeFallback;
+    const frequencyKey = getFrequencyKey(occurrence.frequency);
     return {
       id: `${occurrence.entryId}-${index}`,
       entryId: occurrence.entryId,
@@ -225,6 +229,7 @@ function buildRecurrences(
       description: occurrence.name,
       amount: occurrence.amount,
       recurring,
+      frequencyKey,
     };
   });
 }
@@ -263,9 +268,9 @@ export function buildDashboardData(input: DashboardInput): DashboardData {
 
 export function createMockDashboardData(): DashboardData {
   const kpis: KPIItem[] = [
-    { id: "liquidity", label: "Liquidità", value: 16450, deltaValue: 420, deltaPct: 0.026 },
-    { id: "investments", label: "Investimenti", value: 32800, deltaValue: -620, deltaPct: -0.018 },
-    { id: "netWorth", label: "Patrimonio", value: 49250, deltaValue: -200, deltaPct: -0.004 },
+    { id: "liquidity", label: i18n.t("dashboard.mock.kpi.liquidity"), value: 16450, deltaValue: 420, deltaPct: 0.026 },
+    { id: "investments", label: i18n.t("dashboard.mock.kpi.investments"), value: 32800, deltaValue: -620, deltaPct: -0.018 },
+    { id: "netWorth", label: i18n.t("dashboard.mock.kpi.netWorth"), value: 49250, deltaValue: -200, deltaPct: -0.004 },
   ];
   const portfolioSeries: PortfolioPoint[] = [
     { date: "2024-11-01", total: 46800, liquidity: 15800, investments: 31000 },
@@ -274,9 +279,9 @@ export function createMockDashboardData(): DashboardData {
     { date: "2025-02-01", total: 49250, liquidity: 16450, investments: 32800 },
   ];
   const distributions: DistributionItem[] = [
-    { id: "cash", label: "Contanti", value: 4200, color: palette[0] },
-    { id: "bank", label: "Conto", value: 8450, color: palette[1] },
-    { id: "broker", label: "Broker", value: 32800, color: palette[2] },
+    { id: "cash", label: i18n.t("dashboard.mock.distributions.cash"), value: 4200, color: palette[0] },
+    { id: "bank", label: i18n.t("dashboard.mock.distributions.bank"), value: 8450, color: palette[1] },
+    { id: "broker", label: i18n.t("dashboard.mock.distributions.broker"), value: 32800, color: palette[2] },
   ];
   const cashflow: CashflowSummary = {
     avgIncome: 2450,
@@ -291,10 +296,10 @@ export function createMockDashboardData(): DashboardData {
     ],
   };
   const categories: CategoryRow[] = [
-    { id: "c1", label: "Casa", value: 520, pct: 0.32, color: palette[3] },
-    { id: "c2", label: "Cibo", value: 420, pct: 0.26, color: palette[4] },
-    { id: "c3", label: "Trasporti", value: 310, pct: 0.19, color: palette[5] },
-    { id: "c4", label: "Altro", value: 240, pct: 0.15, color: palette[6] },
+    { id: "c1", label: i18n.t("dashboard.mock.categories.home"), value: 520, pct: 0.32, color: palette[3] },
+    { id: "c2", label: i18n.t("dashboard.mock.categories.food"), value: 420, pct: 0.26, color: palette[4] },
+    { id: "c3", label: i18n.t("dashboard.mock.categories.transport"), value: 310, pct: 0.19, color: palette[5] },
+    { id: "c4", label: i18n.t("dashboard.mock.categories.other"), value: 240, pct: 0.15, color: palette[6] },
   ];
   const recurrences: RecurrenceRow[] = [
     {
@@ -302,8 +307,8 @@ export function createMockDashboardData(): DashboardData {
       entryId: 1,
       date: "2025-02-16",
       type: "income",
-      category: "Entrata",
-      description: "Stipendio",
+      category: i18n.t("dashboard.mock.recurrences.incomeCategory"),
+      description: i18n.t("dashboard.mock.recurrences.salary"),
       amount: 2100,
       recurring: true,
     },
@@ -312,8 +317,8 @@ export function createMockDashboardData(): DashboardData {
       entryId: 2,
       date: "2025-02-20",
       type: "expense",
-      category: "Casa",
-      description: "Affitto",
+      category: i18n.t("dashboard.mock.recurrences.homeCategory"),
+      description: i18n.t("dashboard.mock.recurrences.rent"),
       amount: 850,
       recurring: true,
     },
@@ -322,8 +327,8 @@ export function createMockDashboardData(): DashboardData {
       entryId: 3,
       date: "2025-02-22",
       type: "expense",
-      category: "Cibo",
-      description: "Spesa",
+      category: i18n.t("dashboard.mock.recurrences.foodCategory"),
+      description: i18n.t("dashboard.mock.recurrences.expense"),
       amount: 120,
       recurring: false,
     },

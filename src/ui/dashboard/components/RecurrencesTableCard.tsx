@@ -8,6 +8,7 @@ import PressScale from "@/ui/dashboard/components/PressScale";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
 import { formatEUR, formatShortDate } from "@/ui/dashboard/formatters";
 import type { RecurrenceRow } from "@/ui/dashboard/types";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   rows: RecurrenceRow[];
@@ -34,11 +35,12 @@ export default function RecurrencesTableCard({
   noCard = false,
 }: Props): JSX.Element {
   const { tokens } = useDashboardTheme();
+  const { t } = useTranslation();
   const content = (
     <>
-      {!hideHeader && <SectionHeader title="Prossimi movimenti" />}
+      {!hideHeader && <SectionHeader title={t("dashboard.recurrences.header")} />}
       {rows.length === 0 ? (
-        <Text style={[styles.empty, { color: tokens.colors.muted }]}>Nessun movimento programmato.</Text>
+        <Text style={[styles.empty, { color: tokens.colors.muted }]}>{t("dashboard.recurrences.empty")}</Text>
       ) : (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.table}>
           <View>
@@ -48,28 +50,28 @@ export default function RecurrencesTableCard({
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
-                Data
+                {t("dashboard.recurrences.table.date")}
               </Text>
               <Text
                 style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellAmount]}
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
-                Importo
+                {t("dashboard.recurrences.table.amount")}
               </Text>
               <Text
                 style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellDesc]}
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
-                Nome
+                {t("dashboard.recurrences.table.name")}
               </Text>
               <Text
                 style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellCategory]}
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
-                Categoria
+                {t("dashboard.recurrences.table.category")}
               </Text>
             </View>
             {rows.map((item, index) => {
@@ -87,13 +89,24 @@ export default function RecurrencesTableCard({
                     <Text style={[styles.cell, styles.cellAmount, { color: amountColor }]}>
                       {formatEUR(item.amount)}
                     </Text>
-                    <Text
-                      style={[styles.cell, { color: tokens.colors.text }, styles.cellDesc]}
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                    >
-                      {item.description}
-                    </Text>
+                    <View style={styles.descriptionContainer}>
+                      <Text
+                        style={[styles.cell, { color: tokens.colors.text }, styles.cellDesc]}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
+                        {item.description}
+                      </Text>
+                      {item.frequencyKey ? (
+                        <Text
+                          style={[styles.frequency, { color: tokens.colors.muted }]}
+                          numberOfLines={1}
+                          ellipsizeMode="tail"
+                        >
+                          {t(item.frequencyKey)}
+                        </Text>
+                      ) : null}
+                    </View>
                     <View style={[styles.cell, styles.cellCategory]}>
                       <Chip label={item.category} color={categoryColor} />
                     </View>
@@ -105,7 +118,9 @@ export default function RecurrencesTableCard({
                           { borderColor: tokens.colors.accent, backgroundColor: `${tokens.colors.accent}14` },
                         ]}
                       >
-                        <Text style={[styles.actionText, { color: tokens.colors.accent }]}>Modifica</Text>
+                        <Text style={[styles.actionText, { color: tokens.colors.accent }]}>
+                          {t("dashboard.recurrences.action")}
+                        </Text>
                       </PressScale>
                     </View>
                   </View>
@@ -209,6 +224,14 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 11,
     fontWeight: "700",
+  },
+  descriptionContainer: {
+    flexDirection: "column",
+    flex: 1,
+  },
+  frequency: {
+    fontSize: 10,
+    marginTop: 2,
   },
   empty: {},
 });

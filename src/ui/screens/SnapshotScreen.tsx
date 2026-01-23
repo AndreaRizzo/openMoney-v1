@@ -3,6 +3,7 @@ import { Alert, Platform, RefreshControl, ScrollView, StyleSheet, View } from "r
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Button, Text, TextInput } from "react-native-paper";
 import { useRoute } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import {
   createSnapshotWithLines,
   getSnapshotByDate,
@@ -69,6 +70,7 @@ export default function SnapshotScreen(): JSX.Element {
   const { tokens } = useDashboardTheme();
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
+  const { t } = useTranslation();
   const route = useRoute();
   const openNew = (route.params as { openNew?: boolean } | undefined)?.openNew;
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
@@ -372,9 +374,11 @@ export default function SnapshotScreen(): JSX.Element {
                 const wallet = orderedWallets.find((item) => item.id === line.walletId);
                 const walletTitle = wallet
                   ? wallet.type === "INVEST"
-                    ? `${wallet.tag || "Tipo investimento"} - ${wallet.name} - ${wallet.currency}`
+                    ? `${wallet.tag || t("wallets.snapshot.investmentTypeFallback")} - ${wallet.name} - ${
+                        wallet.currency
+                      }`
                     : `${wallet.name} - ${wallet.currency}`
-                  : `Wallet #${line.walletId}`;
+                  : t("wallets.snapshot.walletFallback", { id: line.walletId });
                 const toggleSign = () => {
                   const current = line.amount.trim();
                   const toggled = current.startsWith("-") ? current.slice(1) : current === "" ? "-" : `-${current}`;
@@ -498,8 +502,8 @@ export default function SnapshotScreen(): JSX.Element {
             {sortedLines.map((line) => {
               const walletLabel =
                 line.wallet_type === "INVEST" && line.wallet_tag
-                  ? `${line.wallet_tag} • ${line.wallet_name ?? "Sconosciuto"}`
-                  : line.wallet_name ?? "Sconosciuto";
+                  ? `${line.wallet_tag} • ${line.wallet_name ?? t("wallets.snapshot.unknown")}`
+                  : line.wallet_name ?? t("wallets.snapshot.unknown");
               const wallet = walletById.get(line.wallet_id);
               const currencySuffix = wallet ? currencySymbol(wallet.currency) : "";
               return (

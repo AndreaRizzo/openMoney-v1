@@ -10,6 +10,7 @@ export type Occurrence = {
   name: string;
   note: string | null;
   entryId: number;
+  frequency: RecurrenceFrequency | null;
 };
 
 function toRule(
@@ -90,6 +91,7 @@ export function nextOccurrencesForEntries(
         name: entry.name,
         note: entry.note,
         entryId: entry.id,
+        frequency: entry.recurrence_frequency ?? null,
       });
     }
   });
@@ -104,6 +106,7 @@ export function nextOccurrencesForEntries(
         name: entry.name,
         note: entry.note,
         entryId: entry.id,
+        frequency: entry.recurrence_frequency ?? null,
       });
     }
   });
@@ -130,6 +133,7 @@ export function upcomingOccurrences(
           name: entry.name,
           note: entry.note,
           entryId: entry.id,
+          frequency: entry.recurrence_frequency ?? null,
         });
       }
       return;
@@ -145,6 +149,7 @@ export function upcomingOccurrences(
         name: entry.name,
         note: entry.note,
         entryId: entry.id,
+        frequency: entry.recurrence_frequency ?? null,
       });
       cursor = advance(cursor, rule);
       added += 1;

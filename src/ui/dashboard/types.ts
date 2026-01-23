@@ -53,6 +53,7 @@ export type RecurrenceRow = {
   description: string;
   amount: number;
   recurring: boolean;
+  frequencyKey?: string | null;
 };
 
 export type DashboardData = {

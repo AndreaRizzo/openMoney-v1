@@ -1,0 +1,282 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancel",
+    "save": "Save",
+    "continue": "Continue",
+    "start": "Start",
+    "skip": "Skip",
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "close": "Close",
+    "done": "Done",
+    "confirm": "Confirm",
+    "create": "Create",
+    "update": "Update",
+    "reset": "Reset"
+  },
+  "errors": {
+    "genericTitle": "Error"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": {
+      "title": "Language",
+      "it": "Italiano",
+      "en": "English"
+    }
+  },
+  "onboarding": {
+    "intro": {
+      "slide1": {
+        "title": "Welcome to Balance",
+        "subtitle": "Your personal finance in one place. Free forever.",
+        "bullet1": "Full control of your recurring income and expenses",
+        "bullet2": "Detailed charts and reports for your entire portfolio and beyond"
+      },
+      "slide2": {
+        "title": "Open source and transparent",
+        "subtitle": "Public GitHub repo you can check anytime.",
+        "bullet1": "Open code",
+        "bullet2": "No hidden logic"
+      },
+      "slide3": {
+        "title": "Privacy by Design",
+        "subtitle": "Offline-first, works without connection. Your data stays on device.",
+        "bullet1": "No accounts",
+        "bullet2": "No cloud",
+        "bullet3": "No tracking"
+      },
+      "slide4": {
+        "title": "Let’s get started",
+        "subtitle": "A few steps to configure Balance."
+      },
+      "skipTitle": "Skip setup?",
+      "skipMessage": "You can do it later from the profile screen.",
+      "skip": "Skip for now",
+      "start": "Start"
+    },
+    "wallets": {
+      "title": "Wallets",
+      "subtitle": "Choose where you keep money and enter your first balance.",
+      "liquidityTitle": "Liquidity wallet",
+      "liquidityNameLabel": "Wallet name",
+      "initialBalanceLabel": "Initial balance",
+      "nameRequired": "Enter a name",
+      "invalidNumber": "Enter a valid number",
+      "investmentsTitle": "I have investments",
+      "investmentNameLabel": "Investment name",
+      "investmentBalanceLabel": "Initial balance",
+      "addInvestment": "Add an investment"
+    },
+    "categories": {
+      "title": "Categories",
+      "subtitle": "Select the categories you will use from the start.",
+      "defaultTitle": "Default categories",
+      "addedTitle": "Added categories",
+      "addLabel": "Add category",
+      "categoryNameLabel": "Category name",
+      "addButton": "Add"
+    },
+    "recurrence": {
+      "title": "Recurring income",
+      "subtitle": "Enter your main income that arrives every month.",
+      "destinationLabel": "Destination wallet",
+      "incomeNameLabel": "Income name",
+      "amountLabel": "Amount",
+      "amountError": "Enter an amount greater than zero",
+      "nextDateLabel": "Next date",
+      "frequencyInfo": "Frequency: monthly"
+    },
+    "expenses": {
+      "title": "Add your expenses",
+      "subtitle": "Enter at least two outflows to track your initial spending.",
+      "counter": "{{count}}/3 (recommended)",
+      "expenseTitle": "Expense {{index}}",
+      "recurringLabel": "Recurring",
+      "titleLabel": "Title",
+      "amountLabel": "Amount",
+      "categoryLabel": "Category",
+      "walletLabel": "Wallet",
+      "dateLabel": "Date",
+      "nextDateLabel": "Next date",
+      "addAnother": "Add another expense"
+    },
+    "done": {
+      "title": "Ready!",
+      "subtitle": "You set up wallets, categories, incomes, and initial expenses. Head to the dashboard to continue.",
+      "button": "Go to dashboard"
+    }
+  },
+  "dashboard": {
+    "errorTitle": "Unable to load the dashboard",
+    "emptyTitle": "No data available",
+    "emptyBody": "Create at least one wallet to get started.",
+    "greeting": "Hi",
+    "greetingWithName": "Hi {{name}}",
+    "section": {
+      "trend": "Trend over time",
+      "distribution": "Portfolio distribution",
+      "cashflow": "Cash Flow overview",
+      "categories": "Spending by category",
+      "recurrences": "Upcoming movements"
+    },
+    "portfolio": {
+      "header": "Your trend over time",
+      "toggle": {
+        "total": "Total",
+        "liquidity": "Liquidity",
+        "investments": "Investments"
+      },
+      "empty": "No data available."
+    },
+    "distribution": {
+      "empty": "No data available.",
+      "totalLabel": "Total",
+      "totalPercent": "100%"
+    },
+    "cashflow": {
+      "header": "Cash Flow overview",
+      "empty": "No data available.",
+      "avgIncome": "Average monthly income",
+      "avgExpense": "Average monthly expenses",
+      "avgSavings": "Average monthly savings",
+      "annualLabel": "Annual",
+      "chartLegendIncome": "Income",
+      "chartLegendExpense": "Expenses"
+    },
+    "categories": {
+      "header": "Spending by category",
+      "empty": "No data available.",
+      "uncategorized": "Uncategorized"
+    },
+    "recurrences": {
+      "header": "Upcoming movements",
+      "empty": "No scheduled movements.",
+      "table": {
+        "date": "Date",
+        "amount": "Amount",
+        "name": "Name",
+        "category": "Category"
+      },
+      "action": "Edit",
+      "category": {
+        "expense": "Expense",
+        "income": "Income"
+      }
+    },
+    "kpi": {
+      "liquidity": "Liquidity",
+      "investments": "Investments",
+      "netWorth": "Net worth"
+    },
+    "mock": {
+      "kpi": {
+        "liquidity": "Liquidity",
+        "investments": "Investments",
+        "netWorth": "Net worth"
+      },
+      "distributions": {
+        "cash": "Cash",
+        "bank": "Bank",
+        "broker": "Broker"
+      },
+      "categories": {
+        "home": "Home",
+        "food": "Food",
+        "transport": "Transport",
+        "other": "Other"
+      },
+      "recurrences": {
+        "incomeCategory": "Income",
+        "homeCategory": "Home",
+        "foodCategory": "Food",
+        "salary": "Salary",
+        "rent": "Rent",
+        "expense": "Expense"
+      }
+    }
+  },
+  "recurrences": {
+    "frequency": {
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "yearly": "Yearly"
+    }
+  },
+  "wallets": {
+    "list": {
+      "tabLiquidity": "Liquidity",
+      "tabInvest": "Investments",
+      "addWallet": "Add wallet",
+      "newLiquidityTitle": "New liquidity wallet",
+      "newInvestTitle": "New investment wallet",
+      "categoriesTitle": "Expense categories",
+      "newCategoryLabel": "New category",
+      "noCategories": "No categories configured.",
+      "categoryActive": "Active"
+    },
+    "form": {
+      "name": "Name",
+      "brokerLabel": "Broker",
+      "investmentTypeLabel": "Investment type"
+    },
+    "actions": {
+      "limitTitle": "Limit reached",
+      "limitBody": "Limit reached. Download Balance Pro for unlimited wallets.",
+      "downloadPro": "Download Pro",
+      "storeError": "Unable to open the store."
+    },
+    "snapshot": {
+      "investmentTypeFallback": "Investment type",
+      "walletFallback": "Wallet #{{id}}",
+      "unknown": "Unknown"
+    }
+  },
+  "entries": {
+    "list": {
+      "tabIncome": "Incomes",
+      "tabExpense": "Expenses",
+      "sectionTitle": "List",
+      "table": {
+        "date": "Date",
+        "name": "Name",
+        "amount": "Amount",
+        "annual": "Annual amount",
+        "category": "Category",
+        "action": "Edit"
+      },
+      "empty": "No entries.",
+      "categoryFallback": "Uncategorized",
+      "incomeLabel": "Income"
+    },
+    "form": {
+      "name": "Name",
+      "amount": "Amount",
+      "date": "Date",
+      "categoryTitle": "Expense category",
+      "recurringLabel": "Recurring",
+      "intervalLabel": "Interval",
+      "frequency": {
+        "weekly": "Weekly",
+        "monthly": "Monthly",
+        "yearly": "Yearly"
+      }
+    },
+    "actions": {
+      "toggleForm": "Add or edit entries"
+    },
+    "empty": {
+      "noCategoriesActive": "No active categories. Add one below."
+    },
+    "validation": {
+      "nameRequired": "Name is required.",
+      "invalidDate": "Invalid date (YYYY-MM-DD).",
+      "amountInvalid": "Invalid amount.",
+      "categoryRequired": "Category is required.",
+      "removeIdBeforeCreate": "Remove the ID before creating a new entry.",
+      "noEntryForEdit": "No entry selected for editing."
+    }
+  }
+}

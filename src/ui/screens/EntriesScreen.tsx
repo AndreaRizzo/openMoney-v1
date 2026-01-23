@@ -14,6 +14,7 @@ import PressScale from "@/ui/dashboard/components/PressScale";
 import Chip from "@/ui/dashboard/components/Chip";
 import { formatEUR, formatShortDate } from "@/ui/dashboard/formatters";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
+import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 
@@ -54,6 +55,7 @@ export default function EntriesScreen(): JSX.Element {
   const { tokens } = useDashboardTheme();
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
   const scrollRef = useRef<ScrollView | null>(null);
@@ -156,16 +158,16 @@ export default function EntriesScreen(): JSX.Element {
   const saveEntry = async () => {
     setError(null);
     if (!form.name.trim()) {
-      setError("Nome obbligatorio.");
+      setError(t("entries.validation.nameRequired"));
       return;
     }
     if (!isIsoDate(form.startDate)) {
-      setError("Data non valida (YYYY-MM-DD).");
+      setError(t("entries.validation.invalidDate"));
       return;
     }
     const amount = Number(form.amount);
     if (!Number.isFinite(amount)) {
-      setError("Importo non valido.");
+      setError(t("entries.validation.amountInvalid"));
       return;
     }
     const recurring = form.recurring;
@@ -175,11 +177,11 @@ export default function EntriesScreen(): JSX.Element {
     const active = form.active ? 1 : 0;
 
     if (formMode === "create" && form.id) {
-      setError("Rimuovi l'id prima di creare una nuova voce.");
+      setError(t("entries.validation.removeIdBeforeCreate"));
       return;
     }
     if (formMode === "edit" && !form.id) {
-      setError("Nessuna voce selezionata per la modifica.");
+      setError(t("entries.validation.noEntryForEdit"));
       return;
     }
 
@@ -203,7 +205,7 @@ export default function EntriesScreen(): JSX.Element {
     } else {
       const categoryId = Number(form.categoryId);
       if (!Number.isFinite(categoryId)) {
-        setError("Categoria obbligatoria.");
+        setError(t("entries.validation.categoryRequired"));
         return;
       }
       const payload: Omit<ExpenseEntry, "id"> = {
@@ -297,28 +299,28 @@ export default function EntriesScreen(): JSX.Element {
             value={entryType}
             onValueChange={(value) => setEntryType(value as EntryType)}
             buttons={[
-              { value: "income", label: "Entrate" },
-              { value: "expense", label: "Uscite" },
+              { value: "income", label: t("entries.list.tabIncome") },
+              { value: "expense", label: t("entries.list.tabExpense") },
             ]}
             style={{ backgroundColor: tokens.colors.surface2 }}
           />
           <View style={styles.actionsRow}>
-            <Button
-              mode="contained"
-              buttonColor={tokens.colors.accent}
-              contentStyle={styles.fullWidthButtonContent}
-              style={styles.fullWidthButton}
-              onPress={toggleNewEntryVisibility}
-            >
-              Aggiungi o modifica voci
-            </Button>
+              <Button
+                mode="contained"
+                buttonColor={tokens.colors.accent}
+                contentStyle={styles.fullWidthButtonContent}
+                style={styles.fullWidthButton}
+                onPress={toggleNewEntryVisibility}
+              >
+                {t("entries.actions.toggleForm")}
+              </Button>
             </View>
           {showNewEntry && (
             <>
               <View style={styles.formSpacing}>
                 <View style={styles.form}>
                 <TextInput
-                  label="Nome"
+                  label={t("entries.form.name")}
                   value={form.name}
                   mode="outlined"
                   outlineColor={tokens.colors.border}
@@ -328,7 +330,7 @@ export default function EntriesScreen(): JSX.Element {
                   onChangeText={(text) => setForm((prev) => ({ ...prev, name: text }))}
                 />
                 <TextInput
-                  label="Importo"
+                  label={t("entries.form.amount")}
                   keyboardType="decimal-pad"
                   value={form.amount}
                   mode="outlined"
@@ -339,7 +341,7 @@ export default function EntriesScreen(): JSX.Element {
                   onChangeText={(text) => setForm((prev) => ({ ...prev, amount: text }))}
                 />
                 <TextInput
-                  label="Data"
+                  label={t("entries.form.date")}
                   value={form.startDate}
                   editable={false}
                   mode="outlined"
@@ -364,11 +366,11 @@ export default function EntriesScreen(): JSX.Element {
                 )}
                 {entryType === "expense" && (
                   <PremiumCard style={{ backgroundColor: tokens.colors.surface2 }}>
-                    <SectionHeader title="Categoria spesa" />
+                    <SectionHeader title={t("entries.form.categoryTitle")} />
                     <View style={styles.list}>
                       {activeCategories.length === 0 && (
                         <Text style={{ color: tokens.colors.muted }}>
-                          Nessuna categoria attiva. Aggiungine una qui sotto.
+                          {t("entries.empty.noCategoriesActive")}
                         </Text>
                       )}
                       {activeCategories.map((cat) => (
@@ -395,7 +397,7 @@ export default function EntriesScreen(): JSX.Element {
                     value={form.recurring}
                     onValueChange={(value) => setForm((prev) => ({ ...prev, recurring: value }))}
                   />
-                  <Text style={{ color: tokens.colors.text }}>Ricorrente</Text>
+                  <Text style={{ color: tokens.colors.text }}>{t("entries.form.recurringLabel")}</Text>
                 </View>
                 {form.recurring && (
                   <>
@@ -403,14 +405,14 @@ export default function EntriesScreen(): JSX.Element {
                       value={form.frequency}
                       onValueChange={(value) => setForm((prev) => ({ ...prev, frequency: value as RecurrenceFrequency }))}
                       buttons={[
-                        { value: "WEEKLY", label: "Weekly" },
-                        { value: "MONTHLY", label: "Monthly" },
-                        { value: "YEARLY", label: "Yearly" },
+                        { value: "WEEKLY", label: t("entries.form.frequency.weekly") },
+                        { value: "MONTHLY", label: t("entries.form.frequency.monthly") },
+                        { value: "YEARLY", label: t("entries.form.frequency.yearly") },
                       ]}
                       style={{ backgroundColor: tokens.colors.surface2 }}
                     />
                     <TextInput
-                      label="Intervallo"
+                      label={t("entries.form.intervalLabel")}
                       keyboardType="numeric"
                       value={form.interval}
                       mode="outlined"
@@ -427,14 +429,14 @@ export default function EntriesScreen(): JSX.Element {
             </View>
               <View style={styles.actionsRow}>
                 <Button mode="contained" buttonColor={tokens.colors.accent} onPress={saveEntry}>
-                  Salva
+                  {t("common.save")}
                 </Button>
                 <Button mode="outlined" textColor={tokens.colors.text} onPress={() => setForm(emptyForm)}>
-                  Reset
+                  {t("common.reset")}
                 </Button>
                 {form.id && (
                   <Button mode="outlined" textColor={tokens.colors.red} onPress={removeEntry}>
-                    Elimina
+                    {t("common.delete")}
                   </Button>
                 )}
               </View>
@@ -443,30 +445,30 @@ export default function EntriesScreen(): JSX.Element {
         </PremiumCard>
 
         <PremiumCard>
-          <SectionHeader title="Lista" />
+          <SectionHeader title={t("entries.list.sectionTitle")} />
           {entries.length === 0 ? (
-            <Text style={{ color: tokens.colors.muted }}>Nessuna voce.</Text>
+            <Text style={{ color: tokens.colors.muted }}>{t("entries.empty.noEntries")}</Text>
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.table}>
               <View>
                 <View style={styles.headerRow}>
                   <Text style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellDate]} numberOfLines={1}>
-                    Data
+                    {t("entries.list.table.date")}
                   </Text>
                   <Text style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellDesc]} numberOfLines={1}>
-                    Nome
+                    {t("entries.list.table.name")}
                   </Text>
                   <Text style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellAmount]} numberOfLines={1}>
-                    Importo
+                    {t("entries.list.table.amount")}
                   </Text>
                   <Text style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellAnnual]} numberOfLines={1}>
-                    Importo annuo
+                    {t("entries.list.table.annual")}
                   </Text>
                   <Text style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellCategory]} numberOfLines={1}>
-                    Categoria
+                    {t("entries.list.table.category")}
                   </Text>
                   <Text style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellAction]} numberOfLines={1}>
-                    Modifica
+                    {t("entries.list.table.action")}
                   </Text>
                 </View>
                 {sortedEntries.map((entry, index) => {
@@ -492,9 +494,9 @@ export default function EntriesScreen(): JSX.Element {
                         </Text>
                         <View style={[styles.cell, styles.cellCategory]}>
                           {"expense_category_id" in entry ? (
-                            <Chip label={category?.name ?? "Senza categoria"} color={category?.color} />
+                            <Chip label={category?.name ?? t("entries.list.categoryFallback")} color={category?.color} />
                           ) : (
-                            <Chip label="Entrata" tone="green" />
+                            <Chip label={t("entries.list.incomeLabel")} tone="green" />
                           )}
                         </View>
                         <View style={[styles.cell, styles.cellAction]}>
@@ -513,7 +515,7 @@ export default function EntriesScreen(): JSX.Element {
                               { borderColor: tokens.colors.accent, backgroundColor: `${tokens.colors.accent}14` },
                             ]}
                           >
-                            <Text style={[styles.actionText, { color: tokens.colors.accent }]}>Modifica</Text>
+                            <Text style={[styles.actionText, { color: tokens.colors.accent }]}>{t("common.edit")}</Text>
                           </PressScale>
                         </View>
                       </View>

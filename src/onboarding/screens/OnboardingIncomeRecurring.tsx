@@ -7,12 +7,14 @@ import { useNavigation } from "@react-navigation/native";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
 import { OnboardingStackParamList } from "@/onboarding/OnboardingNavigator";
 import { useOnboardingDraft } from "@/onboarding/state/OnboardingContext";
+import { useTranslation } from "react-i18next";
 
 export default function OnboardingIncomeRecurring(): JSX.Element {
   const { tokens } = useDashboardTheme();
   const navigation =
     useNavigation<NativeStackNavigationProp<OnboardingStackParamList, "OnboardingIncomeRecurring">>();
   const { draft, updateRecurringIncome } = useOnboardingDraft();
+  const { t } = useTranslation();
 
   const liquidityWalletName = draft.liquidityWallet.name || "Conto principale";
 
@@ -35,15 +37,17 @@ export default function OnboardingIncomeRecurring(): JSX.Element {
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: tokens.colors.bg }]}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={[styles.title, { color: tokens.colors.text }]}>Entrata ricorrente</Text>
+        <Text style={[styles.title, { color: tokens.colors.text }]}>{t("onboarding.recurrence.title")}</Text>
         <Text style={[styles.subtitle, { color: tokens.colors.muted }]}>
-          Inserisci la tua entrata principale che arriva ogni mese.
+          {t("onboarding.recurrence.subtitle")}
         </Text>
         <View style={[styles.card, { backgroundColor: tokens.colors.surface }]}>
-          <Text style={[styles.sectionLabel, { color: tokens.colors.text }]}>Wallet di destinazione</Text>
+          <Text style={[styles.sectionLabel, { color: tokens.colors.text }]}>
+            {t("onboarding.recurrence.destinationLabel")}
+          </Text>
           <Text style={[styles.walletLabel, { color: tokens.colors.text }]}>{liquidityWalletName}</Text>
           <TextInput
-            label="Nome entrata"
+            label={t("onboarding.recurrence.incomeNameLabel")}
             value={draft.recurringIncome.name}
             mode="flat"
             onChangeText={(text) => updateRecurringIncome({ name: text })}
@@ -51,7 +55,7 @@ export default function OnboardingIncomeRecurring(): JSX.Element {
             textColor={tokens.colors.text}
           />
           <TextInput
-            label="Importo"
+            label={t("onboarding.recurrence.amountLabel")}
             value={draft.recurringIncome.amount}
             mode="flat"
             onChangeText={(text) => updateRecurringIncome({ amount: text })}
@@ -62,11 +66,11 @@ export default function OnboardingIncomeRecurring(): JSX.Element {
           />
           {amountValue.length > 0 && !amountValid && (
             <Text style={[styles.errorText, { color: tokens.colors.error }]}>
-              Inserisci un importo maggiore di zero
+              {t("onboarding.recurrence.amountError")}
             </Text>
           )}
           <TextInput
-            label="Prossima data"
+            label={t("onboarding.recurrence.nextDateLabel")}
             value={draft.recurringIncome.nextDate}
             mode="flat"
             onChangeText={(text) => updateRecurringIncome({ nextDate: text })}
@@ -74,7 +78,7 @@ export default function OnboardingIncomeRecurring(): JSX.Element {
             textColor={tokens.colors.text}
           />
           <Text style={[styles.infoText, { color: tokens.colors.muted }]}>
-            Frequenza: mensile
+            {t("onboarding.recurrence.frequencyInfo")}
           </Text>
         </View>
       </ScrollView>
@@ -85,7 +89,7 @@ export default function OnboardingIncomeRecurring(): JSX.Element {
           onPress={handleContinue}
           disabled={!canContinue}
         >
-          Continua
+          {t("common.continue")}
         </Button>
       </View>
     </SafeAreaView>

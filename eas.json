@@ -17,12 +17,14 @@
     },
     "freeStore": {
       "distribution": "store",
+      "autoIncrement": true,
       "env": {
         "APP_VARIANT": "free"
       }
     },
     "proStore": {
       "distribution": "store",
+      "autoIncrement": true,
       "env": {
         "APP_VARIANT": "pro"
       }

@@ -7,6 +7,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
 import { OnboardingStackParamList } from "@/onboarding/OnboardingNavigator";
 import { useOnboardingDraft } from "@/onboarding/state/OnboardingContext";
+import { useTranslation } from "react-i18next";
 
 export default function OnboardingWallets(): JSX.Element {
   const { tokens } = useDashboardTheme();
@@ -19,6 +20,7 @@ export default function OnboardingWallets(): JSX.Element {
     addInvestmentWallet,
     updateInvestmentWallet,
   } = useOnboardingDraft();
+  const { t } = useTranslation();
 
   const liquidityNameError = draft.liquidityWallet.name.trim().length === 0;
   const balanceValue = draft.liquidityWallet.balance.trim();
@@ -36,15 +38,19 @@ export default function OnboardingWallets(): JSX.Element {
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: tokens.colors.bg }]}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={[styles.title, { color: tokens.colors.text }]}>Wallets</Text>
+        <Text style={[styles.title, { color: tokens.colors.text }]}>
+          {t("onboarding.wallets.title")}
+        </Text>
         <Text style={[styles.subtitle, { color: tokens.colors.muted }]}>
-          Scegli dove tieni i soldi e inserisci il tuo primo saldo.
+          {t("onboarding.wallets.subtitle")}
         </Text>
         <View style={styles.section}>
           <View style={[styles.card, { backgroundColor: tokens.colors.surface }]}>
-            <Text style={[styles.cardTitle, { color: tokens.colors.text }]}>Wallet di liquidità</Text>
+            <Text style={[styles.cardTitle, { color: tokens.colors.text }]}>
+              {t("onboarding.wallets.liquidityTitle")}
+            </Text>
           <TextInput
-            label="Nome wallet"
+            label={t("onboarding.wallets.liquidityNameLabel")}
             value={draft.liquidityWallet.name}
             mode="flat"
             onChangeText={(text) => updateLiquidityWallet({ name: text })}
@@ -54,11 +60,11 @@ export default function OnboardingWallets(): JSX.Element {
           />
           {liquidityNameError && (
             <Text style={[styles.errorText, { color: tokens.colors.error }]}>
-              Inserisci un nome
+              {t("onboarding.wallets.nameRequired")}
             </Text>
           )}
           <TextInput
-            label="Saldo iniziale"
+            label={t("onboarding.wallets.initialBalanceLabel")}
             value={draft.liquidityWallet.balance}
             mode="flat"
             onChangeText={(text) => updateLiquidityWallet({ balance: text })}
@@ -69,7 +75,7 @@ export default function OnboardingWallets(): JSX.Element {
           />
           {balanceValue.length > 0 && !balanceValid && (
             <Text style={[styles.errorText, { color: tokens.colors.error }]}>
-              Inserisci un numero valido
+              {t("onboarding.wallets.invalidNumber")}
             </Text>
           )}
           </View>
@@ -78,7 +84,9 @@ export default function OnboardingWallets(): JSX.Element {
         <View style={styles.section}>
           <View style={[styles.card, { backgroundColor: tokens.colors.surface }]}>
           <View style={styles.switchRow}>
-            <Text style={[styles.cardTitle, { color: tokens.colors.text }]}>Ho investimenti</Text>
+            <Text style={[styles.cardTitle, { color: tokens.colors.text }]}>
+              {t("onboarding.wallets.investmentsTitle")}
+            </Text>
             <Switch value={draft.hasInvestments} onValueChange={setHasInvestments} />
           </View>
           {draft.hasInvestments && (
@@ -86,7 +94,7 @@ export default function OnboardingWallets(): JSX.Element {
               {draft.investmentWallets.map((wallet) => (
                 <View key={wallet.id} style={styles.inputGroup}>
                   <TextInput
-                    label="Nome investimento"
+                    label={t("onboarding.wallets.investmentNameLabel")}
                     value={wallet.name}
                     mode="flat"
                     onChangeText={(text) => updateInvestmentWallet(wallet.id, { name: text })}
@@ -94,7 +102,7 @@ export default function OnboardingWallets(): JSX.Element {
                     textColor={tokens.colors.text}
                   />
                   <TextInput
-                    label="Saldo iniziale"
+                    label={t("onboarding.wallets.investmentBalanceLabel")}
                     value={wallet.balance}
                     mode="flat"
                     keyboardType="numeric"
@@ -110,7 +118,7 @@ export default function OnboardingWallets(): JSX.Element {
                 onPress={addInvestmentWallet}
                 style={styles.addInvestmentButton}
               >
-                Aggiungi un investimento
+                {t("onboarding.wallets.addInvestment")}
               </Button>
             </>
           )}
@@ -124,7 +132,7 @@ export default function OnboardingWallets(): JSX.Element {
           onPress={handleContinue}
           disabled={!canContinue}
         >
-          Continua
+          {t("common.continue")}
         </Button>
       </View>
     </SafeAreaView>

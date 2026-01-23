@@ -1,0 +1,282 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Annulla",
+    "save": "Salva",
+    "continue": "Continua",
+    "start": "Inizia",
+    "skip": "Salta per ora",
+    "add": "Aggiungi",
+    "edit": "Modifica",
+    "delete": "Elimina",
+    "close": "Chiudi",
+    "done": "Fatto",
+    "confirm": "Conferma",
+    "create": "Crea",
+    "update": "Aggiorna",
+    "reset": "Reset"
+  },
+  "errors": {
+    "genericTitle": "Errore"
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "language": {
+      "title": "Lingua",
+      "it": "Italiano",
+      "en": "English"
+    }
+  },
+  "onboarding": {
+    "intro": {
+      "slide1": {
+        "title": "Benvenuto in Balance",
+        "subtitle": "La tua finanza personale. In un unico posto. Gratis, per sempre.",
+        "bullet1": "Pieno controllo delle tue entrate e uscite ricorrenti",
+        "bullet2": "Grafici e report dettagliati del tuo patrimonio e non solo..."
+      },
+      "slide2": {
+        "title": "Open Source e trasparente",
+        "subtitle": "Repository pubblica su GitHub, puoi verificare il codice quando vuoi.",
+        "bullet1": "Codice pubblico",
+        "bullet2": "Nessuna logica nascosta"
+      },
+      "slide3": {
+        "title": "Privacy by Design",
+        "subtitle": "Offline-first, funziona senza connessione. I tuoi dati restano sul tuo dispositivo.",
+        "bullet1": "Nessun account",
+        "bullet2": "Nessun cloud",
+        "bullet3": "Nessun tracciamento"
+      },
+      "slide4": {
+        "title": "Iniziamo subito",
+        "subtitle": "Pochi passaggi per configurare Balance."
+      },
+      "skipTitle": "Saltare la configurazione?",
+      "skipMessage": "Puoi farla in seguito dal profilo.",
+      "skip": "Salta per ora",
+      "start": "Inizia"
+    },
+    "wallets": {
+      "title": "Wallets",
+      "subtitle": "Scegli dove tieni i soldi e inserisci il tuo primo saldo.",
+      "liquidityTitle": "Wallet di liquidità",
+      "liquidityNameLabel": "Nome wallet",
+      "initialBalanceLabel": "Saldo iniziale",
+      "nameRequired": "Inserisci un nome",
+      "invalidNumber": "Inserisci un numero valido",
+      "investmentsTitle": "Ho investimenti",
+      "investmentNameLabel": "Nome investimento",
+      "investmentBalanceLabel": "Saldo iniziale",
+      "addInvestment": "Aggiungi un investimento"
+    },
+    "categories": {
+      "title": "Categorie",
+      "subtitle": "Seleziona le categorie che utilizzerai fin da subito.",
+      "defaultTitle": "Categorie predefinite",
+      "addedTitle": "Categorie aggiunte",
+      "addLabel": "Aggiungi categoria",
+      "categoryNameLabel": "Nome categoria",
+      "addButton": "Aggiungi"
+    },
+    "recurrence": {
+      "title": "Entrata ricorrente",
+      "subtitle": "Inserisci la tua entrata principale che arriva ogni mese.",
+      "destinationLabel": "Wallet di destinazione",
+      "incomeNameLabel": "Nome entrata",
+      "amountLabel": "Importo",
+      "amountError": "Inserisci un importo maggiore di zero",
+      "nextDateLabel": "Prossima data",
+      "frequencyInfo": "Frequenza: mensile"
+    },
+    "expenses": {
+      "title": "Aggiungi le tue spese",
+      "subtitle": "Inserisci almeno due uscite per tenere traccia delle spese iniziali.",
+      "counter": "{{count}}/3 (consigliate)",
+      "expenseTitle": "Spesa {{index}}",
+      "recurringLabel": "Ricorrente",
+      "titleLabel": "Titolo",
+      "amountLabel": "Importo",
+      "categoryLabel": "Categoria",
+      "walletLabel": "Wallet",
+      "dateLabel": "Data",
+      "nextDateLabel": "Prossima data",
+      "addAnother": "Aggiungi un'altra spesa"
+    },
+    "done": {
+      "title": "Pronto!",
+      "subtitle": "Hai impostato wallet, categorie, entrate e spese iniziali. Vai alla dashboard per continuare.",
+      "button": "Vai alla dashboard"
+    }
+  },
+  "dashboard": {
+    "errorTitle": "Impossibile caricare la dashboard",
+    "emptyTitle": "Nessun dato disponibile",
+    "emptyBody": "Crea almeno un wallet per iniziare.",
+    "greeting": "Ciao",
+    "greetingWithName": "Ciao {{name}}",
+    "section": {
+      "trend": "Andamento nel tempo",
+      "distribution": "Distribuzione patrimonio",
+      "cashflow": "Cash Flow. Panoramica",
+      "categories": "Spese per categoria",
+      "recurrences": "Prossimi movimenti"
+    },
+    "portfolio": {
+      "header": "Il tuo andamento nel tempo",
+      "toggle": {
+        "total": "Totale",
+        "liquidity": "Liquidità",
+        "investments": "Investimenti"
+      },
+      "empty": "Nessun dato disponibile."
+    },
+    "distribution": {
+      "empty": "Nessun dato disponibile.",
+      "totalLabel": "Totale",
+      "totalPercent": "100%"
+    },
+    "cashflow": {
+      "header": "Cash Flow. Panoramica",
+      "empty": "Nessun dato disponibile.",
+      "avgIncome": "Entrate medie mensili",
+      "avgExpense": "Uscite medie mensili",
+      "avgSavings": "Risparmio medio mensile",
+      "annualLabel": "Annue",
+      "chartLegendIncome": "Entrate",
+      "chartLegendExpense": "Uscite"
+    },
+    "categories": {
+      "header": "Spese per categoria",
+      "empty": "Nessun dato disponibile.",
+      "uncategorized": "Senza categoria"
+    },
+    "recurrences": {
+      "header": "Prossimi movimenti",
+      "empty": "Nessun movimento programmato.",
+      "table": {
+        "date": "Data",
+        "amount": "Importo",
+        "name": "Nome",
+        "category": "Categoria"
+      },
+      "action": "Modifica",
+      "category": {
+        "expense": "Spesa",
+        "income": "Entrata"
+      }
+    },
+    "kpi": {
+      "liquidity": "Liquidità",
+      "investments": "Investimenti",
+      "netWorth": "Patrimonio"
+    },
+    "mock": {
+      "kpi": {
+        "liquidity": "Liquidità",
+        "investments": "Investimenti",
+        "netWorth": "Patrimonio"
+      },
+      "distributions": {
+        "cash": "Contanti",
+        "bank": "Conto",
+        "broker": "Broker"
+      },
+      "categories": {
+        "home": "Casa",
+        "food": "Cibo",
+        "transport": "Trasporti",
+        "other": "Altro"
+      },
+      "recurrences": {
+        "incomeCategory": "Entrata",
+        "homeCategory": "Casa",
+        "foodCategory": "Cibo",
+        "salary": "Stipendio",
+        "rent": "Affitto",
+        "expense": "Spesa"
+      }
+    }
+  },
+  "recurrences": {
+    "frequency": {
+      "weekly": "Settimanale",
+      "monthly": "Mensile",
+      "yearly": "Annuale"
+    }
+  },
+  "wallets": {
+    "list": {
+      "tabLiquidity": "Liquidità",
+      "tabInvest": "Investimenti",
+      "addWallet": "Aggiungi wallet",
+      "newLiquidityTitle": "Nuovo wallet liquidità",
+      "newInvestTitle": "Nuovo wallet investimenti",
+      "categoriesTitle": "Categorie di spesa",
+      "newCategoryLabel": "Nuova categoria",
+      "noCategories": "Nessuna categoria configurata.",
+      "categoryActive": "Attiva"
+    },
+    "form": {
+      "name": "Nome",
+      "brokerLabel": "Broker",
+      "investmentTypeLabel": "Tipo investimento"
+    },
+    "actions": {
+      "limitTitle": "Limite raggiunto",
+      "limitBody": "Limite raggiunto. Scarica Balance Pro per wallet illimitati.",
+      "downloadPro": "Scarica Pro",
+      "storeError": "Impossibile aprire lo store."
+    },
+    "snapshot": {
+      "investmentTypeFallback": "Tipo investimento",
+      "walletFallback": "Wallet #{{id}}",
+      "unknown": "Sconosciuto"
+    }
+  },
+  "entries": {
+    "list": {
+      "tabIncome": "Entrate",
+      "tabExpense": "Uscite",
+      "sectionTitle": "Lista",
+      "table": {
+        "date": "Data",
+        "name": "Nome",
+        "amount": "Importo",
+        "annual": "Importo annuo",
+        "category": "Categoria",
+        "action": "Modifica"
+      },
+      "empty": "Nessuna voce.",
+      "categoryFallback": "Senza categoria",
+      "incomeLabel": "Entrata"
+    },
+    "form": {
+      "name": "Nome",
+      "amount": "Importo",
+      "date": "Data",
+      "categoryTitle": "Categoria spesa",
+      "recurringLabel": "Ricorrente",
+      "intervalLabel": "Intervallo",
+      "frequency": {
+        "weekly": "Settimanale",
+        "monthly": "Mensile",
+        "yearly": "Annuale"
+      }
+    },
+    "actions": {
+      "toggleForm": "Aggiungi o modifica voci"
+    },
+    "empty": {
+      "noCategoriesActive": "Nessuna categoria attiva. Aggiungine una qui sotto."
+    },
+    "validation": {
+      "nameRequired": "Nome obbligatorio.",
+      "invalidDate": "Data non valida (YYYY-MM-DD).",
+      "amountInvalid": "Importo non valido.",
+      "categoryRequired": "Categoria obbligatoria.",
+      "removeIdBeforeCreate": "Rimuovi l'id prima di creare una nuova voce.",
+      "noEntryForEdit": "Nessuna voce selezionata per la modifica."
+    }
+  }
+}

@@ -24,6 +24,7 @@ import RecurrencesTableCard from "@/ui/dashboard/components/RecurrencesTableCard
 import PremiumCard from "@/ui/dashboard/components/PremiumCard";
 import PressScale from "@/ui/dashboard/components/PressScale";
 import Skeleton from "@/ui/dashboard/components/Skeleton";
+import { useTranslation } from "react-i18next";
 
 type Nav = {
   navigate: (name: string, params?: Record<string, unknown>) => void;
@@ -91,6 +92,7 @@ export default function DashboardScreen(): JSX.Element {
   const [profileName, setProfileName] = useState("");
   const [sectionStates, setSectionStates] = useState<Record<string, boolean>>(DEFAULT_SECTION_STATES);
   const [sectionsLoaded, setSectionsLoaded] = useState(false);
+  const { t } = useTranslation();
 
   const load = useCallback(async () => {
     setError(null);
@@ -226,30 +228,32 @@ export default function DashboardScreen(): JSX.Element {
         {loading && !dashboard && skeleton}
 
         {error && !loading ? (
-          <PremiumCard>
-            <Text style={[styles.errorTitle, { color: tokens.colors.text }]}>Impossibile caricare la dashboard</Text>
+      <PremiumCard>
+        <Text style={[styles.errorTitle, { color: tokens.colors.text }]}>{t("dashboard.errorTitle")}</Text>
             <Text style={[styles.errorBody, { color: tokens.colors.muted }]}>{error}</Text>
           </PremiumCard>
         ) : null}
 
         {emptyState ? (
-          <PremiumCard>
-            <Text style={[styles.emptyTitle, { color: tokens.colors.text }]}>Nessun dato disponibile</Text>
-            <Text style={[styles.emptyBody, { color: tokens.colors.muted }]}>Crea almeno un wallet per iniziare.</Text>
+      <PremiumCard>
+        <Text style={[styles.emptyTitle, { color: tokens.colors.text }]}>{t("dashboard.emptyTitle")}</Text>
+        <Text style={[styles.emptyBody, { color: tokens.colors.muted }]}>{t("dashboard.emptyBody")}</Text>
           </PremiumCard>
         ) : null}
 
         {dashboard ? (
           <>
             <View style={styles.greetingBlock}>
-              <Text style={[styles.greetingText, { color: tokens.colors.text }]}>
-                {profileName ? `Ciao ${profileName}` : "Ciao"}
-              </Text>
+            <Text style={[styles.greetingText, { color: tokens.colors.text }]}>
+              {profileName
+                ? t("dashboard.greetingWithName", { name: profileName })
+                : t("dashboard.greeting")}
+            </Text>
               <KPIStrip items={dashboard.kpis} />
             </View>
 
             <SectionAccordion
-              title="Andamento nel tempo"
+              title={t("dashboard.section.trend")}
               open={sectionStates.andamento}
               onToggle={() => handleToggleSection("andamento")}
             >
@@ -257,7 +261,7 @@ export default function DashboardScreen(): JSX.Element {
             </SectionAccordion>
 
             <SectionAccordion
-              title="Distribuzione patrimonio"
+              title={t("dashboard.section.distribution")}
               open={sectionStates.distribuzione}
               onToggle={() => handleToggleSection("distribuzione")}
             >
@@ -265,7 +269,7 @@ export default function DashboardScreen(): JSX.Element {
             </SectionAccordion>
 
             <SectionAccordion
-              title="Cash Flow. Panoramica"
+              title={t("dashboard.section.cashflow")}
               open={sectionStates.cashflow}
               onToggle={() => handleToggleSection("cashflow")}
             >
@@ -273,7 +277,7 @@ export default function DashboardScreen(): JSX.Element {
             </SectionAccordion>
 
             <SectionAccordion
-              title="Spese per categoria"
+              title={t("dashboard.section.categories")}
               open={sectionStates.categories}
               onToggle={() => handleToggleSection("categories")}
             >
@@ -281,7 +285,7 @@ export default function DashboardScreen(): JSX.Element {
             </SectionAccordion>
 
             <SectionAccordion
-              title="Prossimi movimenti"
+              title={t("dashboard.section.recurrences")}
               open={sectionStates.prossimi}
               onToggle={() => handleToggleSection("prossimi")}
             >

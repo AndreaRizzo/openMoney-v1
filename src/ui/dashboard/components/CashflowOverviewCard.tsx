@@ -14,6 +14,7 @@ import SectionHeader from "@/ui/dashboard/components/SectionHeader";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
 import { formatCompact, formatEUR, formatMonthLabel } from "@/ui/dashboard/formatters";
 import type { CashflowSummary } from "@/ui/dashboard/types";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   cashflow: CashflowSummary;
@@ -23,6 +24,7 @@ type Props = {
 
 export default function CashflowOverviewCard({ cashflow, hideHeader = false, noCard = false }: Props): JSX.Element {
   const { tokens } = useDashboardTheme();
+  const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const isCompact = width < 380;
   const incomeData = cashflow.months.map((month) => ({ x: formatMonthLabel(month.month), y: month.income }));
@@ -38,28 +40,28 @@ export default function CashflowOverviewCard({ cashflow, hideHeader = false, noC
 
   const content = (
     <>
-      {!hideHeader && <SectionHeader title="Cash Flow. Panoramica" />}
+      {!hideHeader && <SectionHeader title={t("dashboard.cashflow.header")} />}
       {cashflow.months.length === 0 ? (
-        <Text style={[styles.empty, { color: tokens.colors.muted }]}>Nessun dato disponibile.</Text>
+        <Text style={[styles.empty, { color: tokens.colors.muted }]}>{t("dashboard.cashflow.empty")}</Text>
       ) : (
         <View style={[styles.layout, isCompact && styles.layoutStacked]}>
           <View style={styles.kpiCol}>
             <View style={styles.kpiRow}>
-              <Text style={[styles.kpiLabel, { color: tokens.colors.muted }]}>Entrate medie mensili</Text>
-              <Text style={[styles.kpiValue, { color: tokens.colors.text }]}>{formatEUR(cashflow.avgIncome)}</Text>
-              <Text style={[styles.kpiSubLabel, { color: tokens.colors.muted }]}>Annue</Text>
-              <Text style={[styles.kpiSubValue, { color: tokens.colors.text }]}>{formatEUR(avgIncomeYear)}</Text>
-            </View>
-            <View style={styles.kpiRow}>
-              <Text style={[styles.kpiLabel, { color: tokens.colors.muted }]}>Uscite medie mensili</Text>
-              <Text style={[styles.kpiValue, { color: tokens.colors.text }]}>{formatEUR(cashflow.avgExpense)}</Text>
-              <Text style={[styles.kpiSubLabel, { color: tokens.colors.muted }]}>Annue</Text>
-              <Text style={[styles.kpiSubValue, { color: tokens.colors.text }]}>{formatEUR(avgExpenseYear)}</Text>
-            </View>
-            <View style={styles.kpiRow}>
-              <Text style={[styles.kpiLabel, { color: tokens.colors.muted }]}>Risparmio medio mensile</Text>
-              <Text style={[styles.kpiValue, { color: savingsColor }]}>{formatEUR(cashflow.avgSavings)}</Text>
-            </View>
+            <Text style={[styles.kpiLabel, { color: tokens.colors.muted }]}>{t("dashboard.cashflow.avgIncome")}</Text>
+            <Text style={[styles.kpiValue, { color: tokens.colors.text }]}>{formatEUR(cashflow.avgIncome)}</Text>
+            <Text style={[styles.kpiSubLabel, { color: tokens.colors.muted }]}>{t("dashboard.cashflow.annualLabel")}</Text>
+            <Text style={[styles.kpiSubValue, { color: tokens.colors.text }]}>{formatEUR(avgIncomeYear)}</Text>
+          </View>
+          <View style={styles.kpiRow}>
+            <Text style={[styles.kpiLabel, { color: tokens.colors.muted }]}>{t("dashboard.cashflow.avgExpense")}</Text>
+            <Text style={[styles.kpiValue, { color: tokens.colors.text }]}>{formatEUR(cashflow.avgExpense)}</Text>
+            <Text style={[styles.kpiSubLabel, { color: tokens.colors.muted }]}>{t("dashboard.cashflow.annualLabel")}</Text>
+            <Text style={[styles.kpiSubValue, { color: tokens.colors.text }]}>{formatEUR(avgExpenseYear)}</Text>
+          </View>
+          <View style={styles.kpiRow}>
+            <Text style={[styles.kpiLabel, { color: tokens.colors.muted }]}>{t("dashboard.cashflow.avgSavings")}</Text>
+            <Text style={[styles.kpiValue, { color: savingsColor }]}>{formatEUR(cashflow.avgSavings)}</Text>
+          </View>
           </View>
           <View style={[styles.chartCol, isCompact && styles.chartColStacked]}>
             <ScrollView

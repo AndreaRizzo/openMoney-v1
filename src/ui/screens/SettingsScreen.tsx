@@ -1,7 +1,8 @@
 /// <reference types="react" />
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Alert, Platform, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
-import { Button, Switch, Text, TextInput } from "react-native-paper";
+import { Button, SegmentedButtons, Switch, Text, TextInput } from "react-native-paper";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system";
 import * as LegacyFileSystem from "expo-file-system/legacy";
 import * as DocumentPicker from "expo-document-picker";
@@ -35,6 +36,8 @@ import { useNavigation, type NavigationProp, type ParamListBase } from "@react-n
 import { disableSecurityFlow } from "@/security/securityFlowsDisableOnly";
 import { handleBiometryToggle as handleBiometryToggleFlow } from "@/security/securityFlowsBiometryOnly";
 import type { SecurityModalStackParamList } from "@/security/securityFlowsTypes";
+import { useTranslation } from "react-i18next";
+import { STORAGE_KEY, SupportedLanguage } from "@/i18n";
 
 function findSecurityModalNavigation(
   navigation: NavigationProp<ParamListBase>
@@ -70,6 +73,18 @@ export default function SettingsScreen(): JSX.Element {
   const { mode, setMode } = useContext(ThemeContext);
   const [refreshing, setRefreshing] = useState(false);
   const { requestReplay } = useOnboardingFlow();
+  const { t, i18n } = useTranslation();
+
+  const currentLanguage = (i18n.resolvedLanguage ?? i18n.language ?? "it") as SupportedLanguage;
+
+  const handleLanguageChange = useCallback(
+    async (next: SupportedLanguage) => {
+      if (next === currentLanguage) return;
+      await AsyncStorage.setItem(STORAGE_KEY, next);
+      await i18n.changeLanguage(next);
+    },
+    [currentLanguage, i18n]
+  );
 
   const load = useCallback(async () => {
     const [name, prefill, points] = await Promise.all([
@@ -386,6 +401,20 @@ export default function SettingsScreen(): JSX.Element {
                 +
               </Button>
             </View>
+            <View style={[styles.languageRow, { marginTop: 12 }]}>
+              <Text style={{ color: tokens.colors.text }}>{t("settings.language.title")}</Text>
+              <SegmentedButtons
+                value={currentLanguage}
+                onValueChange={(value) => {
+                  void handleLanguageChange(value as SupportedLanguage);
+                }}
+                buttons={[
+                  { value: "it", label: t("settings.language.it") },
+                  { value: "en", label: t("settings.language.en") },
+                ]}
+                style={styles.languageControls}
+              />
+            </View>
           </View>
         </PremiumCard>
 
@@ -489,5 +518,13 @@ const styles = StyleSheet.create({
   },
   onboardingSubtitle: {
     fontSize: 12,
+  },
+  languageRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  languageControls: {
+    flex: 1,
   },
 });

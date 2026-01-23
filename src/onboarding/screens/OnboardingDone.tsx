@@ -5,6 +5,7 @@ import { useDashboardTheme } from "@/ui/dashboard/theme";
 import { setOnboardingCompleted } from "@/onboarding/onboardingStorage";
 import { useOnboardingDraft } from "@/onboarding/state/OnboardingContext";
 import { seedOnboardingData } from "@/onboarding/onboardingSeed";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   onComplete: () => void;
@@ -15,6 +16,7 @@ export default function OnboardingDone({ onComplete, shouldSeedOnComplete }: Pro
   const { tokens } = useDashboardTheme();
   const { draft, resetDraft } = useOnboardingDraft();
   const [busy, setBusy] = useState(false);
+  const { t } = useTranslation();
 
   const handleFinish = async () => {
     if (busy) {
@@ -29,7 +31,7 @@ export default function OnboardingDone({ onComplete, shouldSeedOnComplete }: Pro
       resetDraft();
       onComplete();
     } catch (error) {
-      Alert.alert("Errore", (error as Error).message);
+    Alert.alert(t("errors.genericTitle"), (error as Error).message);
     } finally {
       setBusy(false);
     }
@@ -38,9 +40,9 @@ export default function OnboardingDone({ onComplete, shouldSeedOnComplete }: Pro
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: tokens.colors.bg }]}>
       <View style={[styles.card, { backgroundColor: tokens.colors.surface }]}>
-        <Text style={[styles.title, { color: tokens.colors.text }]}>Pronto!</Text>
+        <Text style={[styles.title, { color: tokens.colors.text }]}>{t("onboarding.done.title")}</Text>
         <Text style={[styles.subtitle, { color: tokens.colors.muted }]}>
-          Hai impostato wallet, categorie, entrate e spese iniziali. Vai alla dashboard per continuare.
+          {t("onboarding.done.subtitle")}
         </Text>
         <Button
           mode="contained"
@@ -50,7 +52,7 @@ export default function OnboardingDone({ onComplete, shouldSeedOnComplete }: Pro
           loading={busy}
           disabled={busy}
         >
-          Vai alla dashboard
+          {t("onboarding.done.button")}
         </Button>
       </View>
     </SafeAreaView>

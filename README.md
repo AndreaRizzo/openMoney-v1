@@ -21,3 +21,9 @@ npx expo start
 3. Open a PR with a concise summary.
 
 We care about clean TypeScript, privacy, and offline readiness. Thanks for improving Balance!
+
+## Localization (it/en)
+
+Balance uses `i18next` with `react-i18next` and loads the locales defined in `src/i18n/locales/{it,en}.json`. The initializer in `src/i18n/index.ts` reads the saved language (`settings.language`), falls back to the device locale, and exposes `t()` via `useTranslation()`.
+
+To add a new key, add it to both locale files and reference `t("namespace.key")` in the UI. To support another language, extend `SUPPORTED_LANGUAGES`, add the JSON resource, and ensure `initI18n` can resolve the new locale.

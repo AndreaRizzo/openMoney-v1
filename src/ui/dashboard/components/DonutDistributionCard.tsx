@@ -8,6 +8,7 @@ import PressScale from "@/ui/dashboard/components/PressScale";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
 import { formatEUR, formatPct } from "@/ui/dashboard/formatters";
 import type { DistributionItem } from "@/ui/dashboard/types";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   items: DistributionItem[];
@@ -29,11 +30,12 @@ export default function DonutDistributionCard({ items, hideHeader = false, noCar
   const total = useMemo(() => filteredItems.reduce((sum, item) => sum + item.value, 0), [filteredItems]);
   const active = selected !== null ? filteredItems[selected] : null;
 
+  const { t } = useTranslation();
   const content = (
     <>
-      {!hideHeader && <SectionHeader title="Distribuzione patrimonio" />}
+      {!hideHeader && <SectionHeader title={t("dashboard.section.distribution")} />}
       {filteredItems.length === 0 ? (
-        <Text style={[styles.empty, { color: tokens.colors.muted }]}>Nessun dato disponibile.</Text>
+        <Text style={[styles.empty, { color: tokens.colors.muted }]}>{t("dashboard.distribution.empty")}</Text>
       ) : (
         <View style={[styles.content, isCompact && styles.contentStacked]}>
           <View style={styles.donutWrap}>
@@ -64,10 +66,10 @@ export default function DonutDistributionCard({ items, hideHeader = false, noCar
                 {formatEUR(active ? active.value : total)}
               </Text>
               <Text style={[styles.centerLabelText, { color: tokens.colors.muted }]}>
-                {active ? active.label : "Totale"}
+                {active ? active.label : t("dashboard.distribution.totalLabel")}
               </Text>
               <Text style={[styles.centerPct, { color: tokens.colors.accent }]}>
-                {active ? formatPct(active.value / (total || 1)) : "100%"}
+                {active ? formatPct(active.value / (total || 1)) : t("dashboard.distribution.totalPercent")}
               </Text>
             </View>
           </View>

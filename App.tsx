@@ -30,6 +30,7 @@ import SetPinModal from "@/security/modals/SetPinModal";
 import VerifyPinModal from "@/security/modals/VerifyPinModal";
 import { getSecurityConfig } from "@/security/securityStorage";
 import type { SecurityModalStackParamList } from "@/security/securityFlowsTypes";
+import { initI18n } from "@/i18n";
 
 enableScreens(false);
 
@@ -48,8 +49,25 @@ if (!splashPrevented) {
 
 export default function App(): JSX.Element {
   const { ready, error, themeMode, setThemeMode, retry } = useAppBootstrap();
+  const [i18nReady, setI18nReady] = useState(false);
   const [onboardingCompleted, setOnboardingCompletedState] = useState<boolean | null>(null);
   const [manualOnboarding, setManualOnboarding] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    void initI18n()
+      .catch((error) => {
+        console.warn("Failed to initialize localization:", error);
+      })
+      .finally(() => {
+        if (mounted) {
+          setI18nReady(true);
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -151,6 +169,10 @@ export default function App(): JSX.Element {
   const headerOverlay =
     themeMode === "dark" ? "rgba(15, 18, 30, 0.55)" : "rgba(169, 124, 255, 0.32)";
   const headerBorder = themeMode === "dark" ? navTheme.colors.border : "rgba(169, 124, 255, 0.5)";
+
+  if (!i18nReady) {
+    return null;
+  }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

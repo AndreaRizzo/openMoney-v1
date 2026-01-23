@@ -6,6 +6,7 @@ import SectionHeader from "@/ui/dashboard/components/SectionHeader";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
 import { formatEUR, formatPct } from "@/ui/dashboard/formatters";
 import type { CategoryRow } from "@/ui/dashboard/types";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   items: CategoryRow[];
@@ -42,11 +43,12 @@ function AnimatedBar({
 
 export default function CategoriesBreakdownCard({ items, hideHeader = false, noCard = false }: Props): JSX.Element {
   const { tokens } = useDashboardTheme();
+  const { t } = useTranslation();
   const content = (
     <>
-      {!hideHeader && <SectionHeader title="Spese per categoria" />}
+      {!hideHeader && <SectionHeader title={t("dashboard.categories.header")} />}
       {items.length === 0 ? (
-        <Text style={[styles.empty, { color: tokens.colors.muted }]}>Nessun dato disponibile.</Text>
+        <Text style={[styles.empty, { color: tokens.colors.muted }]}>{t("dashboard.categories.empty")}</Text>
       ) : (
         <View style={styles.list}>
           {items.map((item) => (

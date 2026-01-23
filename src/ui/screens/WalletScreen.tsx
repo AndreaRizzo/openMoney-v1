@@ -18,6 +18,7 @@ import { getPreference } from "@/repositories/preferencesRepo";
 import type { Wallet, Currency, ExpenseCategory } from "@/repositories/types";
 import { APP_VARIANT, LIMITS } from "@/config/entitlements";
 import { openProStoreLink } from "@/config/storeLinks";
+import { useTranslation } from "react-i18next";
 
 type CategoryEdit = {
   name: string;
@@ -48,6 +49,7 @@ export default function WalletScreen(): JSX.Element {
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const [wallets, setWallets] = useState<Wallet[]>([]);
+  const { t } = useTranslation();
   const [walletEdits, setWalletEdits] = useState<Record<number, { name: string; tag: string; currency: Currency }>>({});
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [categoryEdits, setCategoryEdits] = useState<Record<number, CategoryEdit>>({});
@@ -214,8 +216,8 @@ export default function WalletScreen(): JSX.Element {
               value={tab}
               onValueChange={(value) => setTab(value as "LIQUIDITY" | "INVEST")}
               buttons={[
-                { value: "LIQUIDITY", label: "Liquidità" },
-                { value: "INVEST", label: "Investimenti" },
+                { value: "LIQUIDITY", label: t("wallets.list.tabLiquidity") },
+                { value: "INVEST", label: t("wallets.list.tabInvest") },
               ]}
               style={{ backgroundColor: tokens.colors.surface2 }}
             />
@@ -224,15 +226,15 @@ export default function WalletScreen(): JSX.Element {
               <>
                 {!showAddWallet.LIQUIDITY && (
                   <Button mode="contained" buttonColor={tokens.colors.accent} onPress={() => handleRequestAddWallet("LIQUIDITY")}>
-                    Aggiungi wallet
+                    {t("wallets.list.addWallet")}
                   </Button>
                 )}
                 {showAddWallet.LIQUIDITY && (
                   <PremiumCard style={{ backgroundColor: tokens.colors.surface2 }}>
-                    <SectionHeader title="Nuovo wallet liquidità" />
+                    <SectionHeader title={t("wallets.list.newLiquidityTitle")} />
                     <View style={styles.sectionContent}>
                       <TextInput
-                        label="Nome"
+                        label={t("wallets.form.name")}
                         value={newWalletDraft.name}
                         {...inputProps}
                         onChangeText={(value) => setNewWalletDraft((prev) => ({ ...prev, name: value }))}
@@ -250,10 +252,10 @@ export default function WalletScreen(): JSX.Element {
                     </View>
                     <View style={styles.actionsRow}>
                       <Button mode="contained" buttonColor={tokens.colors.accent} onPress={() => addWallet("LIQUIDITY")}>
-                        Aggiungi
+                        {t("common.add")}
                       </Button>
                       <Button mode="outlined" textColor={tokens.colors.text} onPress={() => setShowAddWallet((prev) => ({ ...prev, LIQUIDITY: false }))}>
-                        Annulla
+                        {t("common.cancel")}
                       </Button>
                     </View>
                   </PremiumCard>
@@ -273,7 +275,7 @@ export default function WalletScreen(): JSX.Element {
                   >
                     <View style={styles.sectionContent}>
                       <TextInput
-                        label="Nome"
+                        label={t("wallets.form.name")}
                         value={walletEdits[wallet.id]?.name ?? wallet.name}
                         {...inputProps}
                         onChangeText={(value) =>
@@ -341,21 +343,21 @@ export default function WalletScreen(): JSX.Element {
               <>
                 {!showAddWallet.INVEST && (
                   <Button mode="contained" buttonColor={tokens.colors.accent} onPress={() => handleRequestAddWallet("INVEST")}>
-                    Aggiungi wallet
+                    {t("wallets.list.addWallet")}
                   </Button>
                 )}
                 {showAddWallet.INVEST && (
                   <PremiumCard style={{ backgroundColor: tokens.colors.surface2 }}>
-                    <SectionHeader title="Nuovo wallet investimenti" />
+                    <SectionHeader title={t("wallets.list.newInvestTitle")} />
                     <View style={styles.sectionContent}>
                       <TextInput
-                        label="Broker"
+                        label={t("wallets.form.brokerLabel")}
                         value={newWalletDraft.name}
                         {...inputProps}
                         onChangeText={(value) => setNewWalletDraft((prev) => ({ ...prev, name: value }))}
                       />
                       <TextInput
-                        label="Tipo investimento"
+                        label={t("wallets.form.investmentTypeLabel")}
                         value={newWalletDraft.tag}
                         {...inputProps}
                         onChangeText={(value) => setNewWalletDraft((prev) => ({ ...prev, tag: value }))}
@@ -371,13 +373,13 @@ export default function WalletScreen(): JSX.Element {
                         style={{ backgroundColor: tokens.colors.surface }}
                       />
                     </View>
-                    <View style={styles.actionsRow}>
-                      <Button mode="contained" buttonColor={tokens.colors.accent} onPress={() => addWallet("INVEST")}>
-                        Aggiungi
-                      </Button>
-                      <Button mode="outlined" textColor={tokens.colors.text} onPress={() => setShowAddWallet((prev) => ({ ...prev, INVEST: false }))}>
-                        Annulla
-                      </Button>
+                      <View style={styles.actionsRow}>
+                        <Button mode="contained" buttonColor={tokens.colors.accent} onPress={() => addWallet("INVEST")}>
+                          {t("common.add")}
+                        </Button>
+                        <Button mode="outlined" textColor={tokens.colors.text} onPress={() => setShowAddWallet((prev) => ({ ...prev, INVEST: false }))}>
+                          {t("common.cancel")}
+                        </Button>
                     </View>
                   </PremiumCard>
                 )}
@@ -398,7 +400,7 @@ export default function WalletScreen(): JSX.Element {
                   >
                     <View style={styles.sectionContent}>
                       <TextInput
-                        label="Broker"
+                        label={t("wallets.form.brokerLabel")}
                         value={walletEdits[wallet.id]?.name ?? wallet.name}
                         {...inputProps}
                         onChangeText={(value) =>
@@ -409,7 +411,7 @@ export default function WalletScreen(): JSX.Element {
                         }
                       />
                       <TextInput
-                        label="Tipo investimento"
+                        label={t("wallets.form.investmentTypeLabel")}
                         value={walletEdits[wallet.id]?.tag ?? wallet.tag ?? ""}
                         {...inputProps}
                         onChangeText={(value) =>
@@ -476,11 +478,11 @@ export default function WalletScreen(): JSX.Element {
         </PremiumCard>
 
         <PremiumCard>
-          <SectionHeader title="Categorie di spesa" />
+          <SectionHeader title={t("wallets.list.categoriesTitle")} />
           <View style={styles.sectionContent}>
             <View style={styles.colorLine}>
               <TextInput
-                label="Nuova categoria"
+                label={t("wallets.list.newCategoryLabel")}
                 value={newCategory}
                 {...inputProps}
                 style={[styles.categoryNameInput, inputProps.style]}
@@ -495,16 +497,16 @@ export default function WalletScreen(): JSX.Element {
               />
             </View>
             <Button mode="contained" buttonColor={tokens.colors.accent} onPress={addCategory}>
-              Aggiungi
+              {t("common.add")}
             </Button>
             {categories.length === 0 ? (
-              <Text style={{ color: tokens.colors.muted }}>Nessuna categoria configurata.</Text>
+              <Text style={{ color: tokens.colors.muted }}>{t("wallets.list.noCategories")}</Text>
             ) : null}
             {categories.map((cat) => (
               <List.Accordion
                 key={cat.id}
                 title={categoryEdits[cat.id]?.name ?? cat.name}
-                description="Attiva"
+                description={t("wallets.list.categoryActive")}
                 left={(props) => <List.Icon {...props} icon="tag" />}
                 style={{ marginTop: 8, backgroundColor: tokens.colors.surface2 }}
                 titleStyle={{ color: tokens.colors.text }}
@@ -551,28 +553,28 @@ export default function WalletScreen(): JSX.Element {
                       ]}
                     />
                   </View>
-                  <View style={styles.actionsRow}>
-                    <Button
-                      mode="contained"
-                      buttonColor={tokens.colors.accent}
-                      onPress={async () => {
-                        await saveCategory(cat.id);
-                        setExpandedCategoryId(null);
-                      }}
-                    >
-                      Salva
-                    </Button>
-                    <Button
-                      mode="outlined"
-                      textColor={tokens.colors.red}
-                      onPress={async () => {
-                        await removeCategory(cat.id);
-                        setExpandedCategoryId(null);
-                      }}
-                    >
-                      Elimina
-                    </Button>
-                  </View>
+                    <View style={styles.actionsRow}>
+                      <Button
+                        mode="contained"
+                        buttonColor={tokens.colors.accent}
+                        onPress={async () => {
+                          await saveCategory(cat.id);
+                          setExpandedCategoryId(null);
+                        }}
+                      >
+                        {t("common.save")}
+                      </Button>
+                      <Button
+                        mode="outlined"
+                        textColor={tokens.colors.red}
+                        onPress={async () => {
+                          await removeCategory(cat.id);
+                          setExpandedCategoryId(null);
+                        }}
+                      >
+                        {t("common.delete")}
+                      </Button>
+                    </View>
                 </View>
               </List.Accordion>
             ))}
@@ -581,23 +583,23 @@ export default function WalletScreen(): JSX.Element {
 
         <Portal>
           <Dialog visible={limitDialogVisible} onDismiss={() => setLimitDialogVisible(false)}>
-            <Dialog.Title>Limite raggiunto</Dialog.Title>
+            <Dialog.Title>{t("wallets.actions.limitTitle")}</Dialog.Title>
             <Dialog.Content>
-              <Text>Limite raggiunto. Scarica Balance Pro per wallet illimitati.</Text>
+              <Text>{t("wallets.actions.limitBody")}</Text>
             </Dialog.Content>
             <Dialog.Actions>
               <Button mode="contained" buttonColor={tokens.colors.accent} onPress={handleOpenProStore}>
-                Scarica Pro
+                {t("wallets.actions.downloadPro")}
               </Button>
               <Button mode="text" onPress={() => setLimitDialogVisible(false)}>
-                Chiudi
+                {t("common.close")}
               </Button>
             </Dialog.Actions>
           </Dialog>
         </Portal>
 
         <Snackbar visible={storeErrorVisible} onDismiss={() => setStoreErrorVisible(false)} duration={4000}>
-          Impossibile aprire lo store.
+          {t("wallets.actions.storeError")}
         </Snackbar>
       </ScrollView>
     </View>
