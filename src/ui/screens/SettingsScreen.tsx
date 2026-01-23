@@ -117,7 +117,7 @@ export default function SettingsScreen(): JSX.Element {
   };
 
   const exportData = async () => {
-    const fileName = "openMoney-export.json";
+  const fileName = "balance-export.json";
     try {
       const payload = (await exportToJson()) as ExportPayload;
       const json = JSON.stringify(payload, null, 2);

@@ -49,7 +49,7 @@ export async function authenticateForUnlock(): Promise<{ success: boolean; error
   console.log(`[FaceID] authenticateAsync call #${callId} -> start`);
   try {
     const result = await LocalAuthentication.authenticateAsync({
-      promptMessage: "Sblocca OpenMoney",
+      promptMessage: "Sblocca Balance",
       cancelLabel: "Annulla",
       disableDeviceFallback: true,
       fallbackLabel: "",

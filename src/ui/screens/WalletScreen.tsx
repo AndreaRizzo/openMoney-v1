@@ -583,7 +583,7 @@ export default function WalletScreen(): JSX.Element {
           <Dialog visible={limitDialogVisible} onDismiss={() => setLimitDialogVisible(false)}>
             <Dialog.Title>Limite raggiunto</Dialog.Title>
             <Dialog.Content>
-              <Text>Limite raggiunto. Scarica OpenMoney Pro per wallet illimitati.</Text>
+              <Text>Limite raggiunto. Scarica Balance Pro per wallet illimitati.</Text>
             </Dialog.Content>
             <Dialog.Actions>
               <Button mode="contained" buttonColor={tokens.colors.accent} onPress={handleOpenProStore}>

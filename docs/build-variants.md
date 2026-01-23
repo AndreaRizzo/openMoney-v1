@@ -1,6 +1,6 @@
 # Build Variants
 
-OpenMoney ships in two EAS build variants that share source but differ in bundle identifiers and runtime limits.
+Balance ships in two EAS build variants that share source but differ in bundle identifiers and runtime limits.
 
 | Variant | APP_VARIANT env | Bundle ID / Package | Limits |
 | --- | --- | --- | --- |

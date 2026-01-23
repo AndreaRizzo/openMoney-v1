@@ -27,5 +27,19 @@
         "APP_VARIANT": "pro"
       }
     }
+  },
+  "submit": {
+    "freeStore": {
+      "ios": {
+        "bundleIdentifier": "com.ozzirr.openmoney",
+        "appleTeamId": "G6G624VHBN",
+        "ascAppId": "6758161320"
+      }
+    },
+    "proStore": {
+      "ios": {
+        "appleTeamId": "G6G624VHBN"
+      }
+    }
   }
 }

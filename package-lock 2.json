@@ -36,8 +36,7 @@
         "react-native-safe-area-context": "~5.6.0",
         "react-native-screens": "~4.16.0",
         "react-native-svg": "15.12.1",
-        "victory-native": "^36.7.0",
-        "which": "^6.0.0"
+        "victory-native": "^36.7.0"
       },
       "devDependencies": {
         "@types/react": "~19.1.0",
@@ -3268,9 +3267,9 @@
       }
     },
     "node_modules/@types/node": {
-      "version": "25.0.10",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-25.0.10.tgz",
-      "integrity": "sha512-zWW5KPngR/yvakJgGOmZ5vTBemDoSqF3AcV/LrO5u5wTWyEAVVh+IT39G4gtyAkh3CtTZs8aX/yRM82OfzHJRg==",
+      "version": "25.0.9",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-25.0.9.tgz",
+      "integrity": "sha512-/rpCXHlCWeqClNBwUhDcusJxXYDjZTyE8v5oTO7WbL8eij2nKhUeU89/6xgjU7N4/Vh3He0BtyhJdQbDyhiXAw==",
       "license": "MIT",
       "dependencies": {
         "undici-types": "~7.16.0"
@@ -3804,9 +3803,9 @@
       "license": "MIT"
     },
     "node_modules/baseline-browser-mapping": {
-      "version": "2.9.17",
-      "resolved": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.9.17.tgz",
-      "integrity": "sha512-agD0MgJFUP/4nvjqzIB29zRPUuCF7Ge6mEv9s8dHrtYD7QWXRcx75rOADE/d5ah1NI+0vkDl0yorDd5U852IQQ==",
+      "version": "2.9.16",
+      "resolved": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.9.16.tgz",
+      "integrity": "sha512-KeUZdBuxngy825i8xvzaK1Ncnkx0tBmb3k8DkEuqjKRkmtvNTjey2ZsNeh8Dw4lfKvbCOu9oeNx2TKm2vHqcRw==",
       "license": "Apache-2.0",
       "bin": {
         "baseline-browser-mapping": "dist/cli.js"
@@ -4346,12 +4345,12 @@
       "license": "MIT"
     },
     "node_modules/core-js-compat": {
-      "version": "3.48.0",
-      "resolved": "https://registry.npmjs.org/core-js-compat/-/core-js-compat-3.48.0.tgz",
-      "integrity": "sha512-OM4cAF3D6VtH/WkLtWvyNC56EZVXsZdU3iqaMG2B4WvYrlqU831pc4UtG5yp0sE9z8Y02wVN7PjW5Zf9Gt0f1Q==",
+      "version": "3.47.0",
+      "resolved": "https://registry.npmjs.org/core-js-compat/-/core-js-compat-3.47.0.tgz",
+      "integrity": "sha512-IGfuznZ/n7Kp9+nypamBhvwdwLsW6KC8IOaURw2doAK5e98AG3acVLdh0woOnEqCfUtS+Vu882JE4k/DAm3ItQ==",
       "license": "MIT",
       "dependencies": {
-        "browserslist": "^4.28.1"
+        "browserslist": "^4.28.0"
       },
       "funding": {
         "type": "opencollective",
@@ -4389,27 +4388,6 @@
         "path-key": "^3.1.0",
         "shebang-command": "^2.0.0",
         "which": "^2.0.1"
-      },
-      "engines": {
-        "node": ">= 8"
-      }
-    },
-    "node_modules/cross-spawn/node_modules/isexe": {
-      "version": "2.0.0",
-      "resolved": "https://registry.npmjs.org/isexe/-/isexe-2.0.0.tgz",
-      "integrity": "sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==",
-      "license": "ISC"
-    },
-    "node_modules/cross-spawn/node_modules/which": {
-      "version": "2.0.2",
-      "resolved": "https://registry.npmjs.org/which/-/which-2.0.2.tgz",
-      "integrity": "sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==",
-      "license": "ISC",
-      "dependencies": {
-        "isexe": "^2.0.0"
-      },
-      "bin": {
-        "node-which": "bin/node-which"
       },
       "engines": {
         "node": ">= 8"
@@ -4931,9 +4909,9 @@
       "license": "MIT"
     },
     "node_modules/electron-to-chromium": {
-      "version": "1.5.277",
-      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.277.tgz",
-      "integrity": "sha512-wKXFZw4erWmmOz5N/grBoJ2XrNJGDFMu2+W5ACHza5rHtvsqrK4gb6rnLC7XxKB9WlJ+RmyQatuEXmtm86xbnw==",
+      "version": "1.5.267",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.267.tgz",
+      "integrity": "sha512-0Drusm6MVRXSOJpGbaSVgcQsuB4hEkMpHXaVstcPmhu5LIedxs1xNK/nIxmQIU/RPC0+1/o0AVZfBTkTNJOdUw==",
       "license": "ISC"
     },
     "node_modules/emittery": {
@@ -6465,13 +6443,10 @@
       }
     },
     "node_modules/isexe": {
-      "version": "3.1.1",
-      "resolved": "https://registry.npmjs.org/isexe/-/isexe-3.1.1.tgz",
-      "integrity": "sha512-LpB/54B+/2J5hqQ7imZHfdU31OlgQqx7ZicVlkm9kzg9/w8GKLEcFfJl/t7DCEDueOyBAD6zCCwTO6Fzs0NoEQ==",
-      "license": "ISC",
-      "engines": {
-        "node": ">=16"
-      }
+      "version": "2.0.0",
+      "resolved": "https://registry.npmjs.org/isexe/-/isexe-2.0.0.tgz",
+      "integrity": "sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==",
+      "license": "ISC"
     },
     "node_modules/istanbul-lib-coverage": {
       "version": "3.2.2",
@@ -7861,9 +7836,9 @@
       }
     },
     "node_modules/lodash": {
-      "version": "4.17.23",
-      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.23.tgz",
-      "integrity": "sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==",
+      "version": "4.17.21",
+      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz",
+      "integrity": "sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==",
       "license": "MIT"
     },
     "node_modules/lodash.debounce": {
@@ -11782,18 +11757,18 @@
       }
     },
     "node_modules/which": {
-      "version": "6.0.0",
-      "resolved": "https://registry.npmjs.org/which/-/which-6.0.0.tgz",
-      "integrity": "sha512-f+gEpIKMR9faW/JgAgPK1D7mekkFoqbmiwvNzuhsHetni20QSgzg9Vhn0g2JSJkkfehQnqdUAx7/e15qS1lPxg==",
+      "version": "2.0.2",
+      "resolved": "https://registry.npmjs.org/which/-/which-2.0.2.tgz",
+      "integrity": "sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==",
       "license": "ISC",
       "dependencies": {
-        "isexe": "^3.1.1"
+        "isexe": "^2.0.0"
       },
       "bin": {
-        "node-which": "bin/which.js"
+        "node-which": "bin/node-which"
       },
       "engines": {
-        "node": "^20.17.0 || >=22.9.0"
+        "node": ">= 8"
       }
     },
     "node_modules/wonka": {

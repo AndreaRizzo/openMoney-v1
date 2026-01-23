@@ -20,23 +20,22 @@ const VARIANT_LIMITS: Record<AppVariant, VariantLimits> = {
   },
 };
 
+const GLOBAL_SLUG = "openmoney";
+
 const VARIANT_CONFIG: Record<AppVariant, {
   name: string;
-  slug: string;
   scheme: string;
   iosBundleIdentifier: string;
   androidPackage: string;
 }> = {
   free: {
-    name: "OpenMoney",
-    slug: "openmoney",
+    name: "Balance",
     scheme: "openmoney",
     iosBundleIdentifier: "com.ozzirr.openmoney",
     androidPackage: "com.ozzirr.openmoney",
   },
   pro: {
-    name: "OpenMoney Pro",
-    slug: "openmoney-pro",
+    name: "Balance Pro",
     scheme: "openmoneypro",
     iosBundleIdentifier: "com.ozzirr.openmoneypro",
     androidPackage: "com.ozzirr.openmoneypro",
@@ -45,7 +44,7 @@ const VARIANT_CONFIG: Record<AppVariant, {
 
 const BASE_PLUGINS = ["expo-sqlite", "@react-native-community/datetimepicker"];
 
-const FACE_ID_USAGE_DESCRIPTION = "Usiamo Face ID per proteggere l'accesso a OpenMoney.";
+const FACE_ID_USAGE_DESCRIPTION = "Usiamo Face ID per proteggere l'accesso a Balance.";
 
 export default function ({ config }: ConfigContext): ExpoConfig {
   const variant = VARIANT_CONFIG[APP_VARIANT];
@@ -59,7 +58,7 @@ export default function ({ config }: ConfigContext): ExpoConfig {
   return {
     ...config,
     name: variant.name,
-    slug: variant.slug,
+    slug: GLOBAL_SLUG,
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/icon.png",
