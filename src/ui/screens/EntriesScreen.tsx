@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Platform, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
-import { Button, SegmentedButtons, Switch, Text, TextInput } from "react-native-paper";
+import { FlatList, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { Button, Switch, Text, TextInput } from "react-native-paper";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { listIncomeEntries, createIncomeEntry, updateIncomeEntry, deleteIncomeEntry } from "@/repositories/incomeEntriesRepo";
@@ -8,18 +8,24 @@ import { listExpenseEntries, createExpenseEntry, updateExpenseEntry, deleteExpen
 import { listExpenseCategories } from "@/repositories/expenseCategoriesRepo";
 import type { ExpenseCategory, ExpenseEntry, IncomeEntry, RecurrenceFrequency } from "@/repositories/types";
 import { isIsoDate, todayIso } from "@/utils/dates";
-import PremiumCard from "@/ui/dashboard/components/PremiumCard";
-import SectionHeader from "@/ui/dashboard/components/SectionHeader";
-import PressScale from "@/ui/dashboard/components/PressScale";
-import Chip from "@/ui/dashboard/components/Chip";
-import { formatEUR, formatShortDate } from "@/ui/dashboard/formatters";
+import { formatEUR } from "@/ui/dashboard/formatters";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
+import AppBackground from "@/ui/components/AppBackground";
 import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
+import {
+  DatePill,
+  FrequencyPillGroup,
+  GlassCardContainer,
+  PrimaryPillButton,
+  SegmentedControlPill,
+  SmallOutlinePillButton,
+} from "@/ui/components/EntriesUI";
 
 type EntryType = "income" | "expense";
 type FormMode = "create" | "edit";
+type CategoryFilter = "all" | number;
 
 type EntriesRouteParams = {
   entryType?: EntryType;
@@ -36,7 +42,6 @@ type FormState = {
   active: boolean;
   recurring: boolean;
   frequency: RecurrenceFrequency;
-  interval: string;
 };
 
 const emptyForm: FormState = {
@@ -48,7 +53,6 @@ const emptyForm: FormState = {
   active: true,
   recurring: false,
   frequency: "MONTHLY",
-  interval: "1",
 };
 
 export default function EntriesScreen(): JSX.Element {
@@ -68,6 +72,7 @@ export default function EntriesScreen(): JSX.Element {
   const [incomeEntries, setIncomeEntries] = useState<IncomeEntry[]>([]);
   const [expenseEntries, setExpenseEntries] = useState<ExpenseEntry[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [form, setForm] = useState<FormState>(emptyForm);
   const [error, setError] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -121,6 +126,13 @@ export default function EntriesScreen(): JSX.Element {
     }
   }, [routeParams.formMode, routeParams.entryId, routeParams.entryType, incomeEntries, expenseEntries]);
 
+  useEffect(() => {
+    // reset category filter when switching to income
+    if (entryType === "income") {
+      setCategoryFilter("all");
+    }
+  }, [entryType]);
+
   const applyEntryToForm = (entry: IncomeEntry | ExpenseEntry, entryMode: EntryType) => {
     setEntryType(entryMode);
     setForm({
@@ -132,7 +144,6 @@ export default function EntriesScreen(): JSX.Element {
       active: entry.active === 1,
       recurring: entry.recurrence_frequency !== null && entry.one_shot === 0,
       frequency: entry.recurrence_frequency ?? "MONTHLY",
-      interval: entry.recurrence_interval?.toString() ?? "1",
     });
     setFormMode("edit");
     setEditingId(entry.id);
@@ -142,7 +153,7 @@ export default function EntriesScreen(): JSX.Element {
     setForm(emptyForm);
     setFormMode("create");
     setEditingId(null);
-    navigation.setParams({ formMode: "create", entryId: undefined, entryType });
+    (navigation as any).setParams({ formMode: "create", entryId: undefined, entryType });
   };
 
   const toggleNewEntryVisibility = () => {
@@ -172,7 +183,7 @@ export default function EntriesScreen(): JSX.Element {
     }
     const recurring = form.recurring;
     const frequency = recurring ? form.frequency : null;
-    const interval = recurring ? Number(form.interval) || 1 : null;
+    const interval = recurring ? 1 : null;
     const oneShot = recurring ? 0 : 1;
     const active = form.active ? 1 : 0;
 
@@ -262,275 +273,302 @@ export default function EntriesScreen(): JSX.Element {
 
   const datePickerValue = form.startDate && isIsoDate(form.startDate) ? new Date(form.startDate) : new Date();
 
-  const toAnnualAmount = (entry: IncomeEntry | ExpenseEntry): number | null => {
-    if (entry.one_shot === 1 || !entry.recurrence_frequency) return null;
-    const interval = entry.recurrence_interval && entry.recurrence_interval > 0 ? entry.recurrence_interval : 1;
-    const periods =
-      entry.recurrence_frequency === "WEEKLY"
-        ? 52 / interval
-        : entry.recurrence_frequency === "MONTHLY"
-          ? 12 / interval
-          : 1 / interval;
-    return entry.amount * periods;
+  const formatIsoToDMY = (iso: string) => {
+    if (!isIsoDate(iso)) return iso;
+    const date = new Date(iso);
+    const dd = String(date.getDate()).padStart(2, "0");
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const yy = String(date.getFullYear()).slice(-2);
+    return `${dd}-${mm}-${yy}`;
   };
 
+  const filteredEntries = useMemo(() => {
+    if (entryType === "income") return entries;
+    return entries.filter((entry) => {
+      if (categoryFilter === "all") return true;
+      return entry.expense_category_id === categoryFilter;
+    });
+  }, [entries, entryType, categoryFilter]);
+
   const sortedEntries = useMemo(() => {
-    return [...entries].sort((a, b) => {
+    return [...filteredEntries].sort((a, b) => {
       if (a.start_date < b.start_date) return -1;
       if (a.start_date > b.start_date) return 1;
       return 0;
     });
-  }, [entries]);
+  }, [filteredEntries]);
+
+  const entryAccent = entryType === "income" ? tokens.colors.income : tokens.colors.expense;
+
+  const scrollToForm = () => {
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+  };
+
+  const formatDateParts = (iso: string) => {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return { day: "--", month: "" };
+    return {
+      day: String(date.getDate()).padStart(2, "0"),
+      month: date.toLocaleString("default", { month: "short" }).replace(".", ""),
+    };
+  };
 
   return (
-    <View style={[styles.screen, { backgroundColor: tokens.colors.bg }]}>
+    <AppBackground>
       <ScrollView
         ref={scrollRef}
         contentContainerStyle={[
           styles.container,
-          { gap: tokens.spacing.md, paddingBottom: 160 + insets.bottom, paddingTop: headerHeight + 12 },
+          { gap: tokens.spacing.lg, paddingBottom: 140 + insets.bottom, paddingTop: headerHeight + 12 },
         ]}
-        alwaysBounceVertical
-        bounces
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tokens.colors.accent} />}
       >
-        <PremiumCard>
-          <SegmentedButtons
+        <GlassCardContainer contentStyle={{ gap: tokens.spacing.md }}>
+          <SegmentedControlPill
             value={entryType}
-            onValueChange={(value) => setEntryType(value as EntryType)}
-            buttons={[
-              { value: "income", label: t("entries.list.tabIncome") },
-              { value: "expense", label: t("entries.list.tabExpense") },
+            onChange={(next) => setEntryType(next as EntryType)}
+            options={[
+              { value: "income", label: t("entries.list.tabIncome"), tint: `${tokens.colors.income}44` },
+              { value: "expense", label: t("entries.list.tabExpense"), tint: `${tokens.colors.expense}33` },
             ]}
-            style={{ backgroundColor: tokens.colors.surface2 }}
           />
-          <View style={styles.actionsRow}>
-              <Button
-                mode="contained"
-                buttonColor={tokens.colors.accent}
-                contentStyle={styles.fullWidthButtonContent}
-                style={styles.fullWidthButton}
-                onPress={toggleNewEntryVisibility}
-              >
-                {t("entries.actions.toggleForm")}
-              </Button>
-            </View>
-          {showNewEntry && (
-            <>
-              <View style={styles.formSpacing}>
-                <View style={styles.form}>
-                <TextInput
-                  label={t("entries.form.name")}
-                  value={form.name}
-                  mode="outlined"
-                  outlineColor={tokens.colors.border}
-                  activeOutlineColor={tokens.colors.accent}
-                  textColor={tokens.colors.text}
-                  style={{ backgroundColor: tokens.colors.surface2 }}
-                  onChangeText={(text) => setForm((prev) => ({ ...prev, name: text }))}
-                />
+
+          <PrimaryPillButton
+            label={t("entries.actions.toggleForm")}
+            onPress={() => {
+              toggleNewEntryVisibility();
+              setTimeout(scrollToForm, 80);
+            }}
+            color={tokens.colors.purplePrimary}
+          />
+        </GlassCardContainer>
+
+        {showNewEntry && (
+          <GlassCardContainer>
+            <Text style={[styles.sectionTitle, { color: tokens.colors.text }]}>{t("entries.form.newEntryTitle") ?? "New Entry"}</Text>
+            <View style={{ gap: 12 }}>
+              <TextInput
+                label={t("entries.form.name")}
+                value={form.name}
+                mode="outlined"
+                outlineColor={tokens.colors.glassBorder}
+                activeOutlineColor={entryAccent}
+                textColor={tokens.colors.text}
+                style={[styles.glassInput, { backgroundColor: tokens.colors.glassBg }]}
+                onChangeText={(text) => setForm((prev) => ({ ...prev, name: text }))}
+              />
+              <View style={styles.inlineInputs}>
                 <TextInput
                   label={t("entries.form.amount")}
                   keyboardType="decimal-pad"
                   value={form.amount}
                   mode="outlined"
-                  outlineColor={tokens.colors.border}
-                  activeOutlineColor={tokens.colors.accent}
+                  outlineColor={entryAccent}
+                  activeOutlineColor={entryAccent}
                   textColor={tokens.colors.text}
-                  style={{ backgroundColor: tokens.colors.surface2 }}
+                  style={[styles.glassInput, styles.flex, { backgroundColor: tokens.colors.glassBg }]}
                   onChangeText={(text) => setForm((prev) => ({ ...prev, amount: text }))}
                 />
                 <TextInput
                   label={t("entries.form.date")}
-                  value={form.startDate}
+                  value={formatIsoToDMY(form.startDate)}
                   editable={false}
                   mode="outlined"
-                  outlineColor={tokens.colors.border}
+                  outlineColor={tokens.colors.glassBorder}
                   activeOutlineColor={tokens.colors.accent}
                   textColor={tokens.colors.text}
-                  style={{ backgroundColor: tokens.colors.surface2 }}
-                  onPressIn={() => setShowDatePicker(true)}
+                  right={<TextInput.Icon icon="calendar" />}
+                  style={[styles.glassInput, styles.flex, { backgroundColor: tokens.colors.glassBg }]}
+                  onPressIn={() => setShowDatePicker((prev) => !prev)}
                 />
-                {showDatePicker && (
-                  <DateTimePicker
-                    value={datePickerValue}
-                    mode="date"
-                    display={Platform.OS === "ios" ? "spinner" : "default"}
-                    onChange={(_, selected) => {
-                      if (selected) {
-                        setForm((prev) => ({ ...prev, startDate: toIsoDate(selected) }));
-                      }
-                      setShowDatePicker(false);
-                    }}
-                  />
-                )}
-                {entryType === "expense" && (
-                  <PremiumCard style={{ backgroundColor: tokens.colors.surface2 }}>
-                    <SectionHeader title={t("entries.form.categoryTitle")} />
-                    <View style={styles.list}>
-                      {activeCategories.length === 0 && (
-                        <Text style={{ color: tokens.colors.muted }}>
-                          {t("entries.empty.noCategoriesActive")}
-                        </Text>
-                      )}
-                      {activeCategories.map((cat) => (
-                        <Button
-                          key={cat.id}
-                          mode={form.categoryId === String(cat.id) ? "contained" : "outlined"}
-                          buttonColor={form.categoryId === String(cat.id) ? cat.color : undefined}
-                          textColor={form.categoryId === String(cat.id) ? tokens.colors.text : tokens.colors.muted}
-                          onPress={() => setForm((prev) => ({ ...prev, categoryId: String(cat.id) }))}
-                          style={
-                            form.categoryId !== String(cat.id)
-                              ? { borderColor: cat.color }
-                              : undefined
-                          }
-                        >
-                          {cat.name}
-                        </Button>
-                      ))}
-                    </View>
-                  </PremiumCard>
-                )}
-                <View style={styles.row}>
-                  <Switch
-                    value={form.recurring}
-                    onValueChange={(value) => setForm((prev) => ({ ...prev, recurring: value }))}
-                  />
-                  <Text style={{ color: tokens.colors.text }}>{t("entries.form.recurringLabel")}</Text>
-                </View>
-                {form.recurring && (
-                  <>
-                    <SegmentedButtons
-                      value={form.frequency}
-                      onValueChange={(value) => setForm((prev) => ({ ...prev, frequency: value as RecurrenceFrequency }))}
-                      buttons={[
-                        { value: "WEEKLY", label: t("entries.form.frequency.weekly") },
-                        { value: "MONTHLY", label: t("entries.form.frequency.monthly") },
-                        { value: "YEARLY", label: t("entries.form.frequency.yearly") },
-                      ]}
-                      style={{ backgroundColor: tokens.colors.surface2 }}
-                    />
-                    <TextInput
-                      label={t("entries.form.intervalLabel")}
-                      keyboardType="numeric"
-                      value={form.interval}
-                      mode="outlined"
-                      outlineColor={tokens.colors.border}
-                      activeOutlineColor={tokens.colors.accent}
-                      textColor={tokens.colors.text}
-                      style={{ backgroundColor: tokens.colors.surface2 }}
-                      onChangeText={(text) => setForm((prev) => ({ ...prev, interval: text }))}
-                    />
-                  </>
-                )}
-                {error && <Text style={{ color: tokens.colors.red }}>{error}</Text>}
               </View>
-            </View>
+              {showDatePicker && (
+                <DateTimePicker
+                  value={datePickerValue}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={(_, selected) => {
+                    if (selected) {
+                      setForm((prev) => ({ ...prev, startDate: toIsoDate(selected) }));
+                    }
+                    setShowDatePicker(false);
+                  }}
+                />
+              )}
+
+              {entryType === "expense" && (
+                <View style={{ gap: 8 }}>
+                  <Text style={{ color: tokens.colors.muted }}>{t("entries.form.categoryTitle")}</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                    {activeCategories.length === 0 ? (
+                      <Text style={{ color: tokens.colors.muted }}>{t("entries.empty.noCategoriesActive")}</Text>
+                    ) : null}
+                    {activeCategories.map((cat) => {
+                      const selected = form.categoryId === String(cat.id);
+                      return (
+                        <Pressable
+                          key={cat.id}
+                          onPress={() => setForm((prev) => ({ ...prev, categoryId: String(cat.id) }))}
+                          style={[
+                            styles.categoryChip,
+                            {
+                              borderColor: selected ? cat.color : tokens.colors.glassBorder,
+                              backgroundColor: selected ? `${cat.color}33` : tokens.colors.glassBg,
+                            },
+                          ]}
+                        >
+                          <Text style={{ color: selected ? tokens.colors.text : tokens.colors.muted }}>{cat.name}</Text>
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              )}
+
+              <View style={[styles.inlineInputs, { alignItems: "center" }]}>
+                <Text style={{ color: tokens.colors.text, flex: 1 }}>{t("entries.form.recurringLabel")}</Text>
+                <Switch
+                  value={form.recurring}
+                  onValueChange={(value) => setForm((prev) => ({ ...prev, recurring: value }))}
+                  color={entryAccent}
+                />
+              </View>
+
+              {form.recurring && (
+                <FrequencyPillGroup
+                  value={form.frequency}
+                  onChange={(next) => setForm((prev) => ({ ...prev, frequency: next as RecurrenceFrequency }))}
+                  options={[
+                    { value: "WEEKLY", label: t("entries.form.frequency.weekly"), tint: `${entryAccent}33` },
+                    { value: "MONTHLY", label: t("entries.form.frequency.monthly"), tint: `${entryAccent}33` },
+                    { value: "YEARLY", label: t("entries.form.frequency.yearly"), tint: `${entryAccent}33` },
+                  ]}
+                />
+              )}
+
+              {error && <Text style={{ color: tokens.colors.expense }}>{error}</Text>}
+
               <View style={styles.actionsRow}>
-                <Button mode="contained" buttonColor={tokens.colors.accent} onPress={saveEntry}>
+                <Button mode="contained" buttonColor={entryAccent} textColor="#0B0B0B" onPress={saveEntry} style={styles.flex}>
                   {t("common.save")}
                 </Button>
-                <Button mode="outlined" textColor={tokens.colors.text} onPress={() => setForm(emptyForm)}>
+                <Button mode="outlined" textColor={tokens.colors.text} onPress={() => setForm(emptyForm)} style={styles.flex}>
                   {t("common.reset")}
                 </Button>
                 {form.id && (
-                  <Button mode="outlined" textColor={tokens.colors.red} onPress={removeEntry}>
+                  <Button mode="outlined" textColor={tokens.colors.expense} onPress={removeEntry} style={styles.flex}>
                     {t("common.delete")}
                   </Button>
                 )}
               </View>
-            </>
-          )}
-        </PremiumCard>
+            </View>
+          </GlassCardContainer>
+        )}
 
-        <PremiumCard>
-          <SectionHeader title={t("entries.list.sectionTitle")} />
-          {entries.length === 0 ? (
-            <Text style={{ color: tokens.colors.muted }}>{t("entries.empty.noEntries")}</Text>
-          ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.table}>
-              <View>
-                <View style={styles.headerRow}>
-                  <Text style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellDate]} numberOfLines={1}>
-                    {t("entries.list.table.date")}
-                  </Text>
-                  <Text style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellDesc]} numberOfLines={1}>
-                    {t("entries.list.table.name")}
-                  </Text>
-                  <Text style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellAmount]} numberOfLines={1}>
-                    {t("entries.list.table.amount")}
-                  </Text>
-                  <Text style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellAnnual]} numberOfLines={1}>
-                    {t("entries.list.table.annual")}
-                  </Text>
-                  <Text style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellCategory]} numberOfLines={1}>
-                    {t("entries.list.table.category")}
-                  </Text>
-                  <Text style={[styles.headerCell, { color: tokens.colors.muted }, styles.cellAction]} numberOfLines={1}>
-                    {t("entries.list.table.action")}
-                  </Text>
-                </View>
-                {sortedEntries.map((entry, index) => {
-                  const annualAmount = toAnnualAmount(entry);
-                  const category =
-                    "expense_category_id" in entry
-                      ? categoryById.get(entry.expense_category_id)
-                      : null;
-                  return (
-                      <React.Fragment key={`${entryType}-${entry.id}`}>
-                      <View style={styles.row}>
-                        <Text style={[styles.cell, { color: tokens.colors.text }, styles.cellDate]}>
-                          {formatShortDate(entry.start_date)}
-                        </Text>
-                        <Text style={[styles.cell, { color: tokens.colors.text }, styles.cellDesc]} numberOfLines={1}>
-                          {entry.name}
-                        </Text>
-                        <Text style={[styles.cell, { color: tokens.colors.text }, styles.cellAmount]}>
-                          {formatEUR(entry.amount)}
-                        </Text>
-                        <Text style={[styles.cell, { color: tokens.colors.muted }, styles.cellAnnual]}>
-                          {annualAmount === null ? "—" : formatEUR(annualAmount)}
-                        </Text>
-                        <View style={[styles.cell, styles.cellCategory]}>
-                          {"expense_category_id" in entry ? (
-                            <Chip label={category?.name ?? t("entries.list.categoryFallback")} color={category?.color} />
-                          ) : (
-                            <Chip label={t("entries.list.incomeLabel")} tone="green" />
-                          )}
-                        </View>
-                        <View style={[styles.cell, styles.cellAction]}>
-                        <PressScale
-                          onPress={() => {
-                            navigation.setParams({
-                              formMode: "edit",
-                              entryId: entry.id,
-                              entryType,
-                            });
-                            setShowNewEntry(true);
-                            scrollRef.current?.scrollTo({ y: 0, animated: true });
-                          }}
-                            style={[
-                              styles.actionButton,
-                              { borderColor: tokens.colors.accent, backgroundColor: `${tokens.colors.accent}14` },
-                            ]}
-                          >
-                            <Text style={[styles.actionText, { color: tokens.colors.accent }]}>{t("common.edit")}</Text>
-                          </PressScale>
-                        </View>
-                      </View>
-                      {index < entries.length - 1 ? (
-                        <View style={[styles.separator, { backgroundColor: tokens.colors.border }]} />
-                      ) : null}
-                    </React.Fragment>
-                  );
-                })}
-              </View>
+        {entryType === "expense" && activeCategories.length > 0 ? (
+          <GlassCardContainer contentStyle={{ gap: 8 }}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={[styles.filterRow, { paddingHorizontal: 4 }]}
+            >
+              <Pressable
+                onPress={() => setCategoryFilter("all")}
+                style={[
+                  styles.filterChip,
+                  {
+                    borderColor: categoryFilter === "all" ? tokens.colors.accent : tokens.colors.glassBorder,
+                    backgroundColor: categoryFilter === "all" ? `${tokens.colors.accent}22` : tokens.colors.glassBg,
+                  },
+                ]}
+              >
+                <Text style={{ color: tokens.colors.text, fontWeight: "600" }}>Tutti</Text>
+              </Pressable>
+              {activeCategories.map((cat) => {
+                const selected = categoryFilter === cat.id;
+                return (
+                  <Pressable
+                    key={cat.id}
+                    onPress={() => setCategoryFilter(cat.id)}
+                    style={[
+                      styles.filterChip,
+                      {
+                        borderColor: selected ? cat.color : tokens.colors.glassBorder,
+                        backgroundColor: selected ? `${cat.color}33` : tokens.colors.glassBg,
+                      },
+                    ]}
+                  >
+                    <Text style={{ color: tokens.colors.text, fontWeight: "600" }}>{cat.name}</Text>
+                  </Pressable>
+                );
+              })}
             </ScrollView>
-          )}
-        </PremiumCard>
+          </GlassCardContainer>
+        ) : null}
+
+        <GlassCardContainer contentStyle={{ gap: 10, paddingBottom: 8 }}>
+          <FlatList
+            data={sortedEntries}
+            keyExtractor={(item) => `${entryType}-${item.id}`}
+            scrollEnabled={false}
+            ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+            ListEmptyComponent={
+              <Text style={{ color: tokens.colors.muted, paddingVertical: 12 }}>{t("entries.empty.noEntries")}</Text>
+            }
+            renderItem={({ item }) => {
+              const { day, month } = formatDateParts(item.start_date);
+              const amountAbs = Math.abs(item.amount);
+              const amountText = `${entryType === "income" ? "+" : "-"} ${formatEUR(amountAbs)}`;
+              const amountColor = entryType === "income" ? tokens.colors.income : tokens.colors.expense;
+              const category =
+                "expense_category_id" in item ? categoryById.get(item.expense_category_id) : null;
+
+              return (
+                <GlassCardContainer style={styles.listRowCard} contentStyle={styles.listRow}>
+                  <DatePill day={day} month={month} />
+                  <View style={styles.listContent}>
+                    <Text
+                      style={[styles.entryName, { color: tokens.colors.text }]}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {item.name}
+                    </Text>
+                    {category ? (
+                      <Text
+                        style={[styles.entryCategory, { color: tokens.colors.muted }]}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
+                        {category.name}
+                      </Text>
+                    ) : null}
+                  </View>
+                  <View style={styles.listRight}>
+                    <Text style={[styles.entryAmount, { color: amountColor }]} numberOfLines={1}>
+                      {amountText}
+                    </Text>
+                    <SmallOutlinePillButton
+                      label={t("common.edit")}
+                      onPress={() => {
+                        (navigation as any).setParams({
+                          formMode: "edit",
+                          entryId: item.id,
+                          entryType,
+                        });
+                        setShowNewEntry(true);
+                        scrollToForm();
+                      }}
+                      color={tokens.colors.accent}
+                    />
+                  </View>
+                </GlassCardContainer>
+              );
+            }}
+          />
+        </GlassCardContainer>
       </ScrollView>
-    </View>
+    </AppBackground>
   );
 }
 
@@ -539,116 +577,85 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   container: {
-    padding: 16,
+    paddingHorizontal: 16,
   },
-  formSpacing: {
-    marginTop: 16,
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    marginBottom: 8,
   },
-  form: {
-    gap: 12,
+  glassInput: {
+    borderRadius: 12,
   },
-  row: {
+  inlineInputs: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+    gap: 12,
   },
   actionsRow: {
     flexDirection: "row",
     gap: 12,
-    marginTop: 12,
+    marginTop: 4,
     flexWrap: "wrap",
   },
-  addButton: {
-    borderRadius: 12,
-    minWidth: 44,
-  },
-  addButtonContent: {
-    height: 44,
-    width: 44,
-    paddingHorizontal: 0,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  addButtonLabel: {
-    marginVertical: 0,
-  },
-  fullWidthButton: {
+  flex: {
     flex: 1,
   },
-  fullWidthButtonContent: {
-    height: 44,
+  categoryChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
   },
-  list: {
+  filterRow: {
     gap: 8,
+    paddingLeft: 8,
   },
-  table: {
-    gap: 12,
-    paddingBottom: 2,
+  filterChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
   },
-  headerRow: {
+  listRowCard: {
+    width: "100%",
+    alignSelf: "stretch",
+  },
+  listRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingBottom: 8,
-    flexWrap: "nowrap",
-    width: 760,
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
-  headerCell: {
+  listContent: {
+    flex: 1,
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: "auto",
+    gap: 4,
+    minWidth: 0,
+    marginLeft: 2,
+    marginRight: 6,
+  },
+  listRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flexShrink: 0,
+  },
+  entryName: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  entryCategory: {
     fontSize: 12,
     fontWeight: "600",
-    minWidth: 0,
+    textTransform: "capitalize",
   },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 8,
-    flexWrap: "nowrap",
-    width: 760,
-  },
-  cell: {
-    fontSize: 12,
-    minWidth: 0,
-  },
-  cellDate: {
-    width: 80,
-    flexShrink: 0,
-    marginRight: 6,
-  },
-  cellDesc: {
-    width: 180,
-    flexShrink: 1,
-    marginRight: 6,
-  },
-  cellCategory: {
-    width: 140,
-    flexShrink: 0,
-    marginRight: 6,
-  },
-  cellAmount: {
-    width: 110,
-    flexShrink: 0,
-    marginRight: 6,
-  },
-  cellAnnual: {
-    width: 140,
-    flexShrink: 0,
-  },
-  cellAction: {
-    width: 90,
-    flexShrink: 0,
-    marginLeft: 6,
-  },
-  separator: {
-    height: 1,
-  },
-  actionButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: "center",
-  },
-  actionText: {
-    fontSize: 11,
-    fontWeight: "700",
+  entryAmount: {
+    fontSize: 16,
+    fontWeight: "800",
+    minWidth: 82,
+    textAlign: "right",
   },
 });

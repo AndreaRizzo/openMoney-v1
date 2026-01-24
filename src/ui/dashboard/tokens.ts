@@ -7,6 +7,11 @@ export type DashboardTokens = {
     text: string;
     muted: string;
     accent: string;
+    purplePrimary: string;
+    income: string;
+    expense: string;
+    glassBg: string;
+    glassBorder: string;
     accentPurple: string;
     green: string;
     red: string;
@@ -67,6 +72,11 @@ export function createDashboardTokens(isDark: boolean): DashboardTokens {
           text: "#EAF0F9",
           muted: "#9BA6B5",
           accent: "#A97CFF",
+          purplePrimary: "#A97CFF",
+          income: "#7FE3B1",
+          expense: "#F28B82",
+          glassBg: "rgba(255,255,255,0.06)",
+          glassBorder: "rgba(255,255,255,0.12)",
           accentPurple: "#C4A5FF",
           green: "#66D19E",
           red: "#F08C7A",
@@ -83,6 +93,11 @@ export function createDashboardTokens(isDark: boolean): DashboardTokens {
           text: "#101522",
           muted: "#5E6B7A",
           accent: "#A97CFF",
+          purplePrimary: "#8E6CFF",
+          income: "#2BB36C",
+          expense: "#E06666",
+          glassBg: "rgba(255,255,255,0.76)",
+          glassBorder: "rgba(16,24,40,0.12)",
           accentPurple: "#9E7BFF",
           green: "#1E9D66",
           red: "#E15A4F",

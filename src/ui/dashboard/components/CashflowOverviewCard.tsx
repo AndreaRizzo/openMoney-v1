@@ -30,8 +30,6 @@ export default function CashflowOverviewCard({ cashflow, hideHeader = false, noC
   const incomeData = cashflow.months.map((month) => ({ x: formatMonthLabel(month.month), y: month.income }));
   const expenseData = cashflow.months.map((month) => ({ x: formatMonthLabel(month.month), y: month.expense }));
   const savingsColor = cashflow.avgSavings >= 0 ? tokens.colors.green : tokens.colors.red;
-  const avgIncomeYear = cashflow.avgIncome * 12;
-  const avgExpenseYear = cashflow.avgExpense * 12;
   const visibleWidth = Math.max(width - 64, 0);
   const chartWidth = Math.max(visibleWidth, cashflow.months.length * 70);
   const chartOffset = Math.max(chartWidth - visibleWidth, 0);
@@ -49,14 +47,10 @@ export default function CashflowOverviewCard({ cashflow, hideHeader = false, noC
             <View style={styles.kpiRow}>
             <Text style={[styles.kpiLabel, { color: tokens.colors.muted }]}>{t("dashboard.cashflow.avgIncome")}</Text>
             <Text style={[styles.kpiValue, { color: tokens.colors.text }]}>{formatEUR(cashflow.avgIncome)}</Text>
-            <Text style={[styles.kpiSubLabel, { color: tokens.colors.muted }]}>{t("dashboard.cashflow.annualLabel")}</Text>
-            <Text style={[styles.kpiSubValue, { color: tokens.colors.text }]}>{formatEUR(avgIncomeYear)}</Text>
           </View>
           <View style={styles.kpiRow}>
             <Text style={[styles.kpiLabel, { color: tokens.colors.muted }]}>{t("dashboard.cashflow.avgExpense")}</Text>
             <Text style={[styles.kpiValue, { color: tokens.colors.text }]}>{formatEUR(cashflow.avgExpense)}</Text>
-            <Text style={[styles.kpiSubLabel, { color: tokens.colors.muted }]}>{t("dashboard.cashflow.annualLabel")}</Text>
-            <Text style={[styles.kpiSubValue, { color: tokens.colors.text }]}>{formatEUR(avgExpenseYear)}</Text>
           </View>
           <View style={styles.kpiRow}>
             <Text style={[styles.kpiLabel, { color: tokens.colors.muted }]}>{t("dashboard.cashflow.avgSavings")}</Text>
@@ -153,21 +147,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   kpiRow: {
-    gap: 4,
+    gap: 6,
   },
   kpiLabel: {
     fontSize: 12,
   },
   kpiValue: {
     fontSize: 13,
-    fontWeight: "600",
-  },
-  kpiSubLabel: {
-    fontSize: 12,
-    marginTop: 6,
-  },
-  kpiSubValue: {
-    fontSize: 12,
     fontWeight: "600",
   },
   chartScroll: {

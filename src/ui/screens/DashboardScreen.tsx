@@ -21,9 +21,11 @@ import DonutDistributionCard from "@/ui/dashboard/components/DonutDistributionCa
 import CashflowOverviewCard from "@/ui/dashboard/components/CashflowOverviewCard";
 import CategoriesBreakdownCard from "@/ui/dashboard/components/CategoriesBreakdownCard";
 import RecurrencesTableCard from "@/ui/dashboard/components/RecurrencesTableCard";
-import PremiumCard from "@/ui/dashboard/components/PremiumCard";
 import PressScale from "@/ui/dashboard/components/PressScale";
 import Skeleton from "@/ui/dashboard/components/Skeleton";
+import AppBackground from "@/ui/components/AppBackground";
+import { GlassCardContainer, PillChip, SegmentedControlPill } from "@/ui/components/EntriesUI";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useSettings } from "@/settings/useSettings";
 
@@ -59,22 +61,16 @@ const SectionAccordion = ({ title, open, onToggle, children }: SectionAccordionP
   };
   return (
     <View style={styles.section}>
-      <PremiumCard style={styles.cardWrapper}>
+      <GlassCardContainer>
         <PressScale
-          style={[
-            styles.cardHeader,
-            {
-              borderColor: tokens.colors.border,
-              backgroundColor: tokens.colors.surface2,
-            },
-          ]}
+          style={[styles.cardHeader, { borderColor: tokens.colors.glassBorder }]}
           onPress={handleToggle}
         >
           <Text style={[styles.accordionTitle, { color: tokens.colors.text }]}>{title}</Text>
           <Text style={[styles.accordionIcon, { color: tokens.colors.muted }]}>{open ? "−" : "+"}</Text>
         </PressScale>
         {open && <View style={styles.accordionContent}>{children}</View>}
-      </PremiumCard>
+      </GlassCardContainer>
     </View>
   );
 };
@@ -218,12 +214,12 @@ export default function DashboardScreen(): JSX.Element {
   );
 
   return (
-    <View style={[styles.screen, { backgroundColor: tokens.colors.bg }]}>
+    <AppBackground>
       <ScrollView
         contentContainerStyle={[
           styles.container,
           {
-            paddingTop: headerHeight + 6,
+            paddingTop: headerHeight + 12,
             paddingBottom: 160 + insets.bottom,
           },
         ]}
@@ -299,7 +295,7 @@ export default function DashboardScreen(): JSX.Element {
                 hideHeader
                 noCard
                 onPressRow={(row) =>
-                  navigation.navigate("Entrate/Uscite", {
+                  navigation.navigate("Balance", {
                     entryType: row.type,
                     formMode: "edit",
                     entryId: row.entryId,
@@ -310,15 +306,11 @@ export default function DashboardScreen(): JSX.Element {
           </>
         ) : null}
       </ScrollView>
-
-    </View>
+    </AppBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
   container: {
     paddingHorizontal: 16,
     gap: 10,

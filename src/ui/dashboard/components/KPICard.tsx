@@ -3,7 +3,7 @@ import { LayoutAnimation, StyleSheet, View } from "react-native";
 import { Text } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import PressScale from "@/ui/dashboard/components/PressScale";
-import PremiumCard from "@/ui/dashboard/components/PremiumCard";
+import { GlassCardContainer } from "@/ui/components/EntriesUI";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
 import { formatEUR, formatPct } from "@/ui/dashboard/formatters";
 import type { KPIItem } from "@/ui/dashboard/types";
@@ -58,16 +58,7 @@ export default function KPICard({ item }: Props): JSX.Element {
 
   return (
     <PressScale onPress={onToggle} style={styles.pressable}>
-      <PremiumCard
-        style={[
-          styles.card,
-          {
-            borderColor: `${tokens.colors.accent}66`,
-            backgroundColor: tokens.colors.surface2,
-            shadowColor: tokens.colors.accent,
-          },
-        ]}
-      >
+      <GlassCardContainer style={styles.card}>
         <View style={styles.headerRow}>
           <Text style={[styles.label, { color: tokens.colors.muted }]}>{item.label}</Text>
           <MaterialCommunityIcons name={icon} size={16} color={item.accent ?? tokens.colors.accent} />
@@ -93,7 +84,7 @@ export default function KPICard({ item }: Props): JSX.Element {
             ))}
           </View>
         ) : null}
-      </PremiumCard>
+      </GlassCardContainer>
     </PressScale>
   );
 }
@@ -104,7 +95,6 @@ const styles = StyleSheet.create({
     flexBasis: "48%",
   },
   card: {
-    padding: 16,
     gap: 6,
   },
   headerRow: {

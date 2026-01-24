@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
-import { Button, List, SegmentedButtons, Snackbar, Text, TextInput } from "react-native-paper";
-import PremiumCard from "@/ui/dashboard/components/PremiumCard";
+import { List, Snackbar, Text, TextInput } from "react-native-paper";
 import SectionHeader from "@/ui/dashboard/components/SectionHeader";
 import PressScale from "@/ui/dashboard/components/PressScale";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
@@ -21,6 +20,14 @@ import { openProStoreLink } from "@/config/storeLinks";
 import { useTranslation } from "react-i18next";
 import { useSettings } from "@/settings/useSettings";
 import LimitReachedModal from "@/ui/components/LimitReachedModal";
+import AppBackground from "@/ui/components/AppBackground";
+import {
+  GlassCardContainer,
+  PrimaryPillButton,
+  PillChip,
+  SmallOutlinePillButton,
+  SegmentedControlPill,
+} from "@/ui/components/EntriesUI";
 
 type CategoryEdit = {
   name: string;
@@ -131,6 +138,7 @@ export default function WalletScreen(): JSX.Element {
     const name = edit?.name?.trim();
     if (!name || !edit?.color) return;
     await updateExpenseCategory(id, name, edit.color);
+    setExpandedCategoryId(null);
     await load();
   };
 
@@ -209,7 +217,7 @@ export default function WalletScreen(): JSX.Element {
   };
 
   return (
-    <View style={[styles.screen, { backgroundColor: tokens.colors.bg }]}>
+    <AppBackground>
       <ScrollView
         contentContainerStyle={[
           styles.container,
@@ -219,29 +227,30 @@ export default function WalletScreen(): JSX.Element {
         bounces
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tokens.colors.accent} />}
       >
-        <PremiumCard>
+        <GlassCardContainer>
           <View style={styles.sectionContent}>
             {showInvestments && (
-              <SegmentedButtons
+              <SegmentedControlPill
                 value={tab}
-                onValueChange={(value) => setTab(value as "LIQUIDITY" | "INVEST")}
-                buttons={[
-                  { value: "LIQUIDITY", label: t("wallets.list.tabLiquidity") },
-                  { value: "INVEST", label: t("wallets.list.tabInvest") },
+                onChange={(value) => setTab(value as "LIQUIDITY" | "INVEST")}
+                options={[
+                  { value: "LIQUIDITY", label: t("wallets.list.tabLiquidity"), tint: `${tokens.colors.income}33` },
+                  { value: "INVEST", label: t("wallets.list.tabInvest"), tint: `${tokens.colors.accent}33` },
                 ]}
-                style={{ backgroundColor: tokens.colors.surface2 }}
               />
             )}
 
             {tab === "LIQUIDITY" && (
               <>
                 {!showAddWallet.LIQUIDITY && (
-                  <Button mode="contained" buttonColor={tokens.colors.accent} onPress={() => handleRequestAddWallet("LIQUIDITY")}>
-                    {t("wallets.list.addWallet")}
-                  </Button>
+                  <PrimaryPillButton
+                    label={t("wallets.list.addWallet")}
+                    onPress={() => handleRequestAddWallet("LIQUIDITY")}
+                    color={tokens.colors.accent}
+                  />
                 )}
                 {showAddWallet.LIQUIDITY && (
-                  <PremiumCard style={{ backgroundColor: tokens.colors.surface2 }}>
+                  <GlassCardContainer>
                     <SectionHeader title={t("wallets.list.newLiquidityTitle")} />
                     <View style={styles.sectionContent}>
                       <TextInput
@@ -250,26 +259,21 @@ export default function WalletScreen(): JSX.Element {
                         {...inputProps}
                         onChangeText={(value) => setNewWalletDraft((prev) => ({ ...prev, name: value }))}
                       />
-                      <SegmentedButtons
+                      <SegmentedControlPill
                         value={newWalletDraft.currency}
-                        onValueChange={(value) => setNewWalletDraft((prev) => ({ ...prev, currency: value as Currency }))}
-                        buttons={[
+                        onChange={(value) => setNewWalletDraft((prev) => ({ ...prev, currency: value as Currency }))}
+                        options={[
                           { value: "EUR", label: "EUR" },
                           { value: "USD", label: "USD" },
                           { value: "GBP", label: "GBP" },
                         ]}
-                        style={{ backgroundColor: tokens.colors.surface }}
                       />
                     </View>
                     <View style={styles.actionsRow}>
-                      <Button mode="contained" buttonColor={tokens.colors.accent} onPress={() => addWallet("LIQUIDITY")}>
-                        {t("common.add")}
-                      </Button>
-                      <Button mode="outlined" textColor={tokens.colors.text} onPress={() => setShowAddWallet((prev) => ({ ...prev, LIQUIDITY: false }))}>
-                        {t("common.cancel")}
-                      </Button>
+                      <PrimaryPillButton label={t("common.add")} onPress={() => addWallet("LIQUIDITY")} color={tokens.colors.accent} />
+                      <SmallOutlinePillButton label={t("common.cancel")} onPress={() => setShowAddWallet((prev) => ({ ...prev, LIQUIDITY: false }))} color={tokens.colors.text} />
                     </View>
-                  </PremiumCard>
+                  </GlassCardContainer>
                 )}
 
                 {liquidityWallets.map((wallet) => (
@@ -296,28 +300,27 @@ export default function WalletScreen(): JSX.Element {
                           }))
                         }
                       />
-                      <SegmentedButtons
+                      <SegmentedControlPill
                         value={walletEdits[wallet.id]?.currency ?? wallet.currency}
-                        onValueChange={(value) =>
+                        onChange={(value) =>
                           setWalletEdits((prev) => ({
                             ...prev,
                             [wallet.id]: { ...prev[wallet.id], currency: value as Currency },
                           }))
                         }
-                        buttons={[
+                        options={[
                           { value: "EUR", label: "EUR" },
                           { value: "USD", label: "USD" },
                           { value: "GBP", label: "GBP" },
                         ]}
-                        style={{ backgroundColor: tokens.colors.surface }}
                       />
                       <View style={styles.actionsRow}>
-                        <Button
-                          mode="contained"
-                          buttonColor={tokens.colors.accent}
+                        <PrimaryPillButton
+                          label={t("common.save")}
                           onPress={async () => {
                             const edit = walletEdits[wallet.id];
                             if (!edit) return;
+                            setExpandedWalletId(null);
                             await updateWallet(
                               wallet.id,
                               edit.name,
@@ -327,22 +330,18 @@ export default function WalletScreen(): JSX.Element {
                               wallet.active
                             );
                             await load();
-                            setExpandedWalletId(null);
                           }}
-                        >
-                          Salva
-                        </Button>
-                        <Button
-                          mode="outlined"
-                          textColor={tokens.colors.red}
+                          color={tokens.colors.accent}
+                        />
+                        <SmallOutlinePillButton
+                          label={t("common.delete")}
                           onPress={async () => {
                             await deleteWallet(wallet.id);
                             await load();
                             setExpandedWalletId(null);
                           }}
-                        >
-                          Elimina
-                        </Button>
+                          color={tokens.colors.red}
+                        />
                       </View>
                     </View>
                   </List.Accordion>
@@ -353,12 +352,14 @@ export default function WalletScreen(): JSX.Element {
             {showInvestments && tab === "INVEST" && (
               <>
                 {!showAddWallet.INVEST && (
-                  <Button mode="contained" buttonColor={tokens.colors.accent} onPress={() => handleRequestAddWallet("INVEST")}>
-                    {t("wallets.list.addWallet")}
-                  </Button>
+                  <PrimaryPillButton
+                    label={t("wallets.list.addWallet")}
+                    onPress={() => handleRequestAddWallet("INVEST")}
+                    color={tokens.colors.accent}
+                  />
                 )}
                 {showAddWallet.INVEST && (
-                  <PremiumCard style={{ backgroundColor: tokens.colors.surface2 }}>
+                  <GlassCardContainer>
                     <SectionHeader title={t("wallets.list.newInvestTitle")} />
                     <View style={styles.sectionContent}>
                       <TextInput
@@ -373,26 +374,21 @@ export default function WalletScreen(): JSX.Element {
                         {...inputProps}
                         onChangeText={(value) => setNewWalletDraft((prev) => ({ ...prev, tag: value }))}
                       />
-                      <SegmentedButtons
+                      <SegmentedControlPill
                         value={newWalletDraft.currency}
-                        onValueChange={(value) => setNewWalletDraft((prev) => ({ ...prev, currency: value as Currency }))}
-                        buttons={[
+                        onChange={(value) => setNewWalletDraft((prev) => ({ ...prev, currency: value as Currency }))}
+                        options={[
                           { value: "EUR", label: "EUR" },
                           { value: "USD", label: "USD" },
                           { value: "GBP", label: "GBP" },
                         ]}
-                        style={{ backgroundColor: tokens.colors.surface }}
                       />
                     </View>
                       <View style={styles.actionsRow}>
-                        <Button mode="contained" buttonColor={tokens.colors.accent} onPress={() => addWallet("INVEST")}>
-                          {t("common.add")}
-                        </Button>
-                        <Button mode="outlined" textColor={tokens.colors.text} onPress={() => setShowAddWallet((prev) => ({ ...prev, INVEST: false }))}>
-                          {t("common.cancel")}
-                        </Button>
+                        <PrimaryPillButton label={t("common.add")} onPress={() => addWallet("INVEST")} color={tokens.colors.accent} />
+                        <SmallOutlinePillButton label={t("common.cancel")} onPress={() => setShowAddWallet((prev) => ({ ...prev, INVEST: false }))} color={tokens.colors.text} />
                     </View>
-                  </PremiumCard>
+                  </GlassCardContainer>
                 )}
 
                 {investmentWallets.map((wallet) => (
@@ -432,28 +428,27 @@ export default function WalletScreen(): JSX.Element {
                           }))
                         }
                       />
-                      <SegmentedButtons
+                      <SegmentedControlPill
                         value={walletEdits[wallet.id]?.currency ?? wallet.currency}
-                        onValueChange={(value) =>
+                        onChange={(value) =>
                           setWalletEdits((prev) => ({
                             ...prev,
                             [wallet.id]: { ...prev[wallet.id], currency: value as Currency },
                           }))
                         }
-                        buttons={[
+                        options={[
                           { value: "EUR", label: "EUR" },
                           { value: "USD", label: "USD" },
                           { value: "GBP", label: "GBP" },
                         ]}
-                        style={{ backgroundColor: tokens.colors.surface }}
                       />
                       <View style={styles.actionsRow}>
-                        <Button
-                          mode="contained"
-                          buttonColor={tokens.colors.accent}
+                        <PrimaryPillButton
+                          label={t("common.save")}
                           onPress={async () => {
                             const edit = walletEdits[wallet.id];
                             if (!edit) return;
+                            setExpandedWalletId(null);
                             await updateWallet(
                               wallet.id,
                               edit.name,
@@ -463,22 +458,18 @@ export default function WalletScreen(): JSX.Element {
                               wallet.active
                             );
                             await load();
-                            setExpandedWalletId(null);
                           }}
-                        >
-                          Salva
-                        </Button>
-                        <Button
-                          mode="outlined"
-                          textColor={tokens.colors.red}
+                          color={tokens.colors.accent}
+                        />
+                        <SmallOutlinePillButton
+                          label={t("common.delete")}
                           onPress={async () => {
                             await deleteWallet(wallet.id);
                             await load();
                             setExpandedWalletId(null);
                           }}
-                        >
-                          Elimina
-                        </Button>
+                          color={tokens.colors.red}
+                        />
                       </View>
                     </View>
                   </List.Accordion>
@@ -486,9 +477,9 @@ export default function WalletScreen(): JSX.Element {
               </>
             )}
           </View>
-        </PremiumCard>
+        </GlassCardContainer>
 
-        <PremiumCard>
+        <GlassCardContainer>
           <SectionHeader title={t("wallets.list.categoriesTitle")} />
           <View style={styles.sectionContent}>
             <View style={styles.colorLine}>
@@ -507,9 +498,7 @@ export default function WalletScreen(): JSX.Element {
                 ]}
               />
             </View>
-            <Button mode="contained" buttonColor={tokens.colors.accent} onPress={addCategory}>
-              {t("common.add")}
-            </Button>
+            <PrimaryPillButton label={t("common.add")} onPress={addCategory} color={tokens.colors.accent} />
             {categories.length === 0 ? (
               <Text style={{ color: tokens.colors.muted }}>{t("wallets.list.noCategories")}</Text>
             ) : null}
@@ -565,32 +554,21 @@ export default function WalletScreen(): JSX.Element {
                     />
                   </View>
                     <View style={styles.actionsRow}>
-                      <Button
-                        mode="contained"
-                        buttonColor={tokens.colors.accent}
-                        onPress={async () => {
-                          await saveCategory(cat.id);
-                          setExpandedCategoryId(null);
-                        }}
-                      >
-                        {t("common.save")}
-                      </Button>
-                      <Button
-                        mode="outlined"
-                        textColor={tokens.colors.red}
+                      <PrimaryPillButton label={t("common.save")} onPress={async () => { await saveCategory(cat.id); }} color={tokens.colors.accent} />
+                      <SmallOutlinePillButton
+                        label={t("common.delete")}
                         onPress={async () => {
                           await removeCategory(cat.id);
                           setExpandedCategoryId(null);
                         }}
-                      >
-                        {t("common.delete")}
-                      </Button>
+                        color={tokens.colors.red}
+                      />
                     </View>
                 </View>
               </List.Accordion>
             ))}
           </View>
-        </PremiumCard>
+        </GlassCardContainer>
 
         <LimitReachedModal
           visible={limitModalVisible}
@@ -602,14 +580,11 @@ export default function WalletScreen(): JSX.Element {
           {t("wallets.actions.storeError")}
         </Snackbar>
       </ScrollView>
-    </View>
+    </AppBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
   container: {
     padding: 16,
   },

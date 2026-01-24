@@ -311,6 +311,7 @@
       "name": "Name",
       "amount": "Amount",
       "date": "Date",
+      "newEntryTitle": "New Entry",
       "categoryTitle": "Expense category",
       "recurringLabel": "Recurring",
       "intervalLabel": "Interval",
@@ -391,5 +392,8 @@
       "investments": "Investments",
       "netWorth": "Net worth"
     }
+  },
+  "navigation": {
+    "tabEntries": "Balance"
   }
 }

@@ -12,6 +12,7 @@ import {
 import PremiumCard from "@/ui/dashboard/components/PremiumCard";
 import PressScale from "@/ui/dashboard/components/PressScale";
 import SectionHeader from "@/ui/dashboard/components/SectionHeader";
+import { PillChip } from "@/ui/components/EntriesUI";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
 import { formatCompact, formatEUR, formatMonthLabel } from "@/ui/dashboard/formatters";
 import type { PortfolioPoint } from "@/ui/dashboard/types";
@@ -60,27 +61,12 @@ export default function PortfolioLineChartCard({ data, hideHeader = false, noCar
                 : t("dashboard.portfolio.toggle.investments");
           const active = item === mode;
           return (
-            <PressScale
+            <PillChip
               key={item}
-              style={[
-                styles.toggle,
-                { backgroundColor: tokens.colors.surface2, borderColor: tokens.colors.border },
-                active && styles.toggleActive,
-                active && { borderColor: tokens.colors.accent, backgroundColor: `${tokens.colors.accent}33` },
-              ]}
+              label={label}
+              selected={active}
               onPress={() => setMode(item)}
-            >
-              <Text
-                style={[
-                  styles.toggleText,
-                  { color: tokens.colors.muted },
-                  active && styles.toggleTextActive,
-                  active && { color: tokens.colors.text },
-                ]}
-              >
-                {label}
-              </Text>
-            </PressScale>
+            />
           );
         })}
       </View>
@@ -171,23 +157,8 @@ export default function PortfolioLineChartCard({ data, hideHeader = false, noCar
 const styles = StyleSheet.create({
   toggleRow: {
     flexDirection: "row",
-    gap: 6,
+    gap: 8,
     marginBottom: 8,
-  },
-  toggle: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    borderWidth: 1,
-  },
-  toggleActive: {
-    borderWidth: 1,
-  },
-  toggleText: {
-    fontSize: 12,
-  },
-  toggleTextActive: {
-    fontWeight: "600",
   },
   empty: {
     fontSize: 13,

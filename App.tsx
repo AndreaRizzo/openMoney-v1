@@ -31,6 +31,7 @@ import VerifyPinModal from "@/security/modals/VerifyPinModal";
 import { getSecurityConfig } from "@/security/securityStorage";
 import type { SecurityModalStackParamList } from "@/security/securityFlowsTypes";
 import { initI18n } from "@/i18n";
+import i18n from "i18next";
 import { SettingsProvider } from "@/settings/useSettings";
 
 enableScreens(false);
@@ -232,7 +233,11 @@ export default function App(): JSX.Element {
                                     <Tab.Screen name="Dashboard" component={DashboardScreen} />
                                     <Tab.Screen name="Snapshot" component={SnapshotScreen} />
                                     <Tab.Screen name="Wallet" component={WalletScreen} />
-                                    <Tab.Screen name="Entrate/Uscite" component={EntriesScreen} />
+                                    <Tab.Screen
+                                      name="Balance"
+                                      component={EntriesScreen}
+                                      options={{ tabBarLabel: "Balance" }}
+                                    />
                                     <Tab.Screen
                                       name="Impostazioni"
                                       component={SettingsScreen}

@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 const ICONS: Record<string, string> = {
   Dashboard: "view-grid",
   Snapshot: "calendar-month-outline",
-  "Entrate/Uscite": "swap-vertical",
+  Balance: "swap-vertical",
   Wallet: "wallet-outline",
 };
 

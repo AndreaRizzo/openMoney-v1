@@ -1,18 +1,17 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import { useTheme } from "react-native-paper";
+import { useDashboardTheme } from "@/ui/dashboard/theme";
 
 type Props = {
   children: React.ReactNode;
 };
 
 export default function AppBackground({ children }: Props): JSX.Element {
-  const theme = useTheme();
-  const isDark = theme.dark;
+  const { tokens } = useDashboardTheme();
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={[styles.orbTop, { backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(120,96,255,0.08)" }]} />
-      <View style={[styles.orbBottom, { backgroundColor: isDark ? "rgba(120,96,255,0.12)" : "rgba(120,96,255,0.18)" }]} />
+    <View style={[styles.container, { backgroundColor: tokens.colors.bg }]}>
+      <View style={[styles.orbTop, { backgroundColor: `${tokens.colors.accent}1F` }]} />
+      <View style={[styles.orbBottom, { backgroundColor: `${tokens.colors.income}29` }]} />
       {children}
     </View>
   );

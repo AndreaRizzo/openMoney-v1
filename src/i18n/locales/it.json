@@ -311,6 +311,7 @@
       "name": "Nome",
       "amount": "Importo",
       "date": "Data",
+      "newEntryTitle": "Nuova voce",
       "categoryTitle": "Categoria spesa",
       "recurringLabel": "Ricorrente",
       "intervalLabel": "Intervallo",
@@ -391,5 +392,8 @@
       "investments": "Investimenti",
       "netWorth": "Patrimonio"
     }
+  },
+  "navigation": {
+    "tabEntries": "Balance"
   }
 }

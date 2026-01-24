@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Platform, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, Platform, RefreshControl, ScrollView, StyleSheet, View, Pressable } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Button, Text, TextInput } from "react-native-paper";
+import { Text, TextInput } from "react-native-paper";
 import { useRoute } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import {
@@ -17,11 +17,19 @@ import { getPreference } from "@/repositories/preferencesRepo";
 import type { Snapshot, SnapshotLineDetail, Wallet, Currency } from "@/repositories/types";
 import { isIsoDate, todayIso } from "@/utils/dates";
 import { totalsByWalletType } from "@/domain/calculations";
-import PremiumCard from "@/ui/dashboard/components/PremiumCard";
 import SectionHeader from "@/ui/dashboard/components/SectionHeader";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
+import { useSettings } from "@/settings/useSettings";
+import AppBackground from "@/ui/components/AppBackground";
+import {
+  GlassCardContainer,
+  PrimaryPillButton,
+  PillChip,
+  SmallOutlinePillButton,
+} from "@/ui/components/EntriesUI";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 type DraftLine = {
   walletId: number;
@@ -66,10 +74,17 @@ const monthLabelFromKey = (key: string) => {
   return `${labelMonth.slice(0, 3)} '${year.slice(-2)}`;
 };
 
+const formatHeroMonth = (key: string) => {
+  const [year, month] = key.split("-");
+  const labelMonth = MONTH_LABELS[Number(month)];
+  return `${labelMonth.slice(0, 3)} ${year.slice(-2)}`;
+};
+
 export default function SnapshotScreen(): JSX.Element {
   const { tokens } = useDashboardTheme();
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
+  const { showInvestments } = useSettings();
   const { t } = useTranslation();
   const route = useRoute();
   const openNew = (route.params as { openNew?: boolean } | undefined)?.openNew;
@@ -302,6 +317,40 @@ export default function SnapshotScreen(): JSX.Element {
   const monthLimit = showAllMonths ? monthGroups.length : 5;
   const visibleMonthGroups = monthGroups.slice(0, monthLimit);
   const hasMoreMonths = monthGroups.length > visibleMonthGroups.length;
+  const activeIndex = monthGroups.findIndex((group) => group.key === activeMonthKey);
+  const prevMonthKey = activeIndex >= 0 && activeIndex < monthGroups.length - 1 ? monthGroups[activeIndex + 1]?.key : null;
+  const nextMonthKey = activeIndex > 0 ? monthGroups[activeIndex - 1]?.key : null;
+
+  const isEditingCurrent =
+    showForm &&
+    editingSnapshotId !== null &&
+    activeMonth?.snapshots[0]?.id === editingSnapshotId;
+
+  const heroCtaLabel = (() => {
+    if (activeMonth?.snapshots.length) {
+      return isEditingCurrent ? t("common.cancel") : t("snapshot.actions.edit");
+    }
+    return showForm && !editingSnapshotId ? t("common.cancel") : t("snapshot.actions.new");
+  })();
+
+  const handleHeroCta = () => {
+    if (activeMonth?.snapshots.length) {
+      if (isEditingCurrent) {
+        setShowForm(false);
+        setEditingSnapshotId(null);
+        return;
+      }
+      const targetId = activeMonth.snapshots[0].id;
+      void openEditSnapshot(targetId);
+      return;
+    }
+    if (showForm && !editingSnapshotId) {
+      setShowForm(false);
+      setEditingSnapshotId(null);
+      return;
+    }
+    void openNewSnapshot();
+  };
 
   useEffect(() => {
     if (!activeMonth) return;
@@ -317,7 +366,7 @@ export default function SnapshotScreen(): JSX.Element {
   }, [activeMonth, selectedSnapshotId, loadLines]);
 
   return (
-    <View style={[styles.screen, { backgroundColor: tokens.colors.bg }]}>
+    <AppBackground>
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[
@@ -328,22 +377,98 @@ export default function SnapshotScreen(): JSX.Element {
         bounces
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tokens.colors.accent} />}
       >
-        <PremiumCard>
-          <View style={styles.actionsRow}>
-            <Button
-              mode="contained"
-              buttonColor={tokens.colors.accent}
-              style={styles.fullWidthButton}
-              contentStyle={styles.fullWidthButtonContent}
-              onPress={openNewSnapshot}
-            >
-              {t("snapshot.actions.new")}
-            </Button>
-          </View>
-        </PremiumCard>
+        {/* Header title/subtitle removed per request */}
+
+        {activeMonth && (
+          <GlassCardContainer contentStyle={{ gap: 16 }}>
+            <View style={styles.heroHeader}>
+              <Text style={[styles.sectionLabel, { color: tokens.colors.muted }]}>Current Month</Text>
+              <View
+                style={[
+                  styles.statusBadge,
+                  {
+                    backgroundColor: activeMonth.snapshots.length ? `${tokens.colors.green}22` : `${tokens.colors.red}22`,
+                    borderColor: activeMonth.snapshots.length ? `${tokens.colors.green}66` : `${tokens.colors.red}66`,
+                  },
+                ]}
+              >
+                <Text style={{ color: activeMonth.snapshots.length ? tokens.colors.green : tokens.colors.red, fontWeight: "700" }}>
+                  {activeMonth.snapshots.length ? "Saved" : "Missing"}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.monthSwitcher}>
+              <Pressable
+                disabled={!prevMonthKey}
+                onPress={() => {
+                  if (prevMonthKey) {
+                    setActiveMonthKey(prevMonthKey);
+                    const nextId = monthGroups.find((m) => m.key === prevMonthKey)?.snapshots[0]?.id ?? null;
+                    if (nextId) {
+                      setSelectedSnapshotId(nextId);
+                      void loadLines(nextId);
+                    }
+                  }
+                }}
+                hitSlop={10}
+                style={[styles.switchBtn, { opacity: prevMonthKey ? 1 : 0.35 }]}
+              >
+                <MaterialCommunityIcons name="chevron-left" size={26} color={tokens.colors.text} />
+              </Pressable>
+              <Text style={[styles.monthLabel, { color: tokens.colors.text }]}>{formatHeroMonth(activeMonth.key)}</Text>
+              <Pressable
+                disabled={!nextMonthKey}
+                onPress={() => {
+                  if (nextMonthKey) {
+                    setActiveMonthKey(nextMonthKey);
+                    const nextId = monthGroups.find((m) => m.key === nextMonthKey)?.snapshots[0]?.id ?? null;
+                    if (nextId) {
+                      setSelectedSnapshotId(nextId);
+                      void loadLines(nextId);
+                    }
+                  }
+                }}
+                hitSlop={10}
+                style={[styles.switchBtn, { opacity: nextMonthKey ? 1 : 0.35 }]}
+              >
+                <MaterialCommunityIcons name="chevron-right" size={26} color={tokens.colors.text} />
+              </Pressable>
+            </View>
+
+            <PrimaryPillButton
+              label={heroCtaLabel}
+              onPress={handleHeroCta}
+              color={tokens.colors.accent}
+            />
+          </GlassCardContainer>
+        )}
+
+        {monthGroups.length > 0 && (
+          <GlassCardContainer contentStyle={{ gap: 12 }}>
+            <Text style={[styles.sectionTitle, { color: tokens.colors.text }]}>Recent months</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.recentRow}>
+              {monthGroups.slice(0, 6).map((group) => (
+                <PillChip
+                  key={group.key}
+                  label={monthLabelFromKey(group.key)}
+                  selected={group.key === activeMonthKey}
+                  onPress={() => {
+                    setActiveMonthKey(group.key);
+                    const nextId = group.snapshots[0]?.id ?? null;
+                    if (nextId) {
+                      setSelectedSnapshotId(nextId);
+                      void loadLines(nextId);
+                    }
+                  }}
+                />
+              ))}
+            </ScrollView>
+          </GlassCardContainer>
+        )}
 
         {showForm && (
-          <PremiumCard>
+          <GlassCardContainer>
             <SectionHeader
               title={editingSnapshotId ? t("snapshot.actions.edit") : t("snapshot.actions.new")}
             />
@@ -392,7 +517,7 @@ export default function SnapshotScreen(): JSX.Element {
                   updateDraftLine(index, { amount: value });
                 };
                 return (
-                  <PremiumCard key={`${line.walletId}-${index}`} style={{ backgroundColor: tokens.colors.surface2 }}>
+                  <GlassCardContainer key={`${line.walletId}-${index}`}>
                     <SectionHeader title={walletTitle} />
                     <View style={styles.lineInputRow}>
                       <TextInput
@@ -421,93 +546,34 @@ export default function SnapshotScreen(): JSX.Element {
                         }
                       />
                     </View>
-                  </PremiumCard>
+                  </GlassCardContainer>
                 );
               })}
               {error && <Text style={{ color: tokens.colors.red }}>{error}</Text>}
             </View>
             <View style={styles.actionsRow}>
-              <Button mode="contained" buttonColor={tokens.colors.accent} onPress={saveSnapshot}>
-                Salva
-              </Button>
-              <Button mode="outlined" textColor={tokens.colors.text} onPress={() => setShowForm(false)}>
-                Chiudi
-              </Button>
+              <View style={styles.actionSlot}>
+                <PrimaryPillButton label={t("common.save")} onPress={saveSnapshot} color={tokens.colors.accent} />
+              </View>
+              <View style={styles.actionSlot}>
+                <SmallOutlinePillButton label={t("common.close")} onPress={() => setShowForm(false)} color={tokens.colors.text} />
+              </View>
             </View>
-          </PremiumCard>
+          </GlassCardContainer>
         )}
 
         {monthGroups.length === 0 ? (
-          <PremiumCard>
+          <GlassCardContainer>
             <SectionHeader title={t("snapshot.title")} />
             <Text style={{ color: tokens.colors.muted, padding: 16 }}>
               {t("snapshot.empty.noSnapshots")}
             </Text>
-          </PremiumCard>
-        ) : (
-          <>
-            <PremiumCard>
-              <SectionHeader title={t("snapshot.filter.byMonth")} />
-              <View style={styles.monthRow}>
-                {visibleMonthGroups.map((group) => (
-                  <Button
-                    key={group.key}
-                    mode={group.key === activeMonthKey ? "contained" : "outlined"}
-                    buttonColor={group.key === activeMonthKey ? tokens.colors.accent : undefined}
-                    contentStyle={styles.monthButtonContent}
-                    style={styles.monthButton}
-                    textColor={group.key === activeMonthKey ? tokens.colors.text : tokens.colors.muted}
-                    onPress={() => {
-                      setActiveMonthKey(group.key);
-                    }}
-                  >
-                    {group.label}
-                  </Button>
-                ))}
-                {hasMoreMonths && (
-                  <Button
-                    mode="outlined"
-                    contentStyle={styles.monthButtonContent}
-                    style={styles.monthButton}
-                    textColor={tokens.colors.text}
-                    onPress={() => setShowAllMonths(true)}
-                  >
-                    {t("snapshot.actions.loadMore")}
-                  </Button>
-                )}
-              </View>
-            </PremiumCard>
-            <PremiumCard>
-              <SectionHeader
-                title={
-                  activeMonth?.label
-                    ? `${t("snapshot.title")} ${activeMonth.label}`
-                    : t("snapshot.title")
-                }
-              />
-              <View style={styles.list}>
-                {activeMonth?.snapshots.map((snapshot) => (
-                  <Button
-                    key={snapshot.id}
-                    onPress={() => {
-                      setSelectedSnapshotId(snapshot.id);
-                      void loadLines(snapshot.id);
-                    }}
-                    mode={snapshot.id === selectedSnapshotId ? "contained" : "outlined"}
-                    buttonColor={snapshot.id === selectedSnapshotId ? tokens.colors.accent : undefined}
-                    textColor={snapshot.id === selectedSnapshotId ? tokens.colors.text : tokens.colors.muted}
-                  >
-                    {snapshot.date}
-                  </Button>
-                ))}
-              </View>
-            </PremiumCard>
-          </>
-        )}
+          </GlassCardContainer>
+        ) : null}
 
-        <PremiumCard>
+        <GlassCardContainer contentStyle={{ gap: 12 }}>
           <SectionHeader title={t("snapshot.detail.title")} />
-          <View style={styles.list}>
+          <View style={{ gap: 8 }}>
             {lines.length === 0 && (
               <Text style={{ color: tokens.colors.muted }}>
                 {t("snapshot.detail.emptyLines")}
@@ -521,56 +587,63 @@ export default function SnapshotScreen(): JSX.Element {
               const wallet = walletById.get(line.wallet_id);
               const currencySuffix = wallet ? currencySymbol(wallet.currency) : "";
               return (
-                <Text key={line.id} style={{ color: tokens.colors.text }}>
-                  {walletLabel} • {formatAmount(line.amount)}
-                  {currencySuffix ? ` ${currencySuffix}` : ""}
-                </Text>
+                <Pressable
+                  key={line.id}
+                  style={styles.accountRow}
+                  hitSlop={10}
+                  onPress={() => {
+                    // TODO: navigate to account detail if available
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: tokens.colors.text, fontWeight: "700" }}>{walletLabel}</Text>
+                  </View>
+                  <Text style={{ color: tokens.colors.text, fontWeight: "700" }}>
+                    {formatAmount(line.amount)}
+                    {currencySuffix ? ` ${currencySuffix}` : ""}
+                  </Text>
+                  <MaterialCommunityIcons name="chevron-right" size={20} color={tokens.colors.muted} />
+                </Pressable>
               );
             })}
-            {lines.length > 0 && (
-              <View style={styles.totals}>
-                <Text style={{ color: tokens.colors.muted }}>
-                  {t("snapshot.totals.liquidity")}: {formatAmount(totals.liquidity)}
-                  {totalsCurrencySymbol ? ` ${totalsCurrencySymbol}` : ""}
-                </Text>
-                <Text style={{ color: tokens.colors.muted }}>
-                  {t("snapshot.totals.investments")}: {formatAmount(totals.investments)}
-                  {totalsCurrencySymbol ? ` ${totalsCurrencySymbol}` : ""}
-                </Text>
-                <Text style={{ color: tokens.colors.text }}>
-                  {t("snapshot.totals.netWorth")}: {formatAmount(totals.netWorth)}
-                  {totalsCurrencySymbol ? ` ${totalsCurrencySymbol}` : ""}
-                </Text>
-              </View>
-            )}
-            {selectedSnapshotId && (
-              <View style={styles.editButtonRow}>
-                <Button
-                  mode="outlined"
-                  textColor={tokens.colors.accent}
-                  style={{ borderColor: tokens.colors.accent }}
-                  onPress={() => openEditSnapshot(selectedSnapshotId)}
-                >
-                  {t("snapshot.actions.edit")}
-                </Button>
-              </View>
-            )}
           </View>
-        </PremiumCard>
+        </GlassCardContainer>
+
+        {lines.length > 0 && (
+          <GlassCardContainer contentStyle={{ gap: 10 }}>
+            <Text style={[styles.sectionTitle, { color: tokens.colors.text }]}>Summary</Text>
+            <View style={styles.kpiRow}>
+              <View style={[styles.kpiChip, { borderColor: `${tokens.colors.income}66`, backgroundColor: `${tokens.colors.accent}22` }]}>
+                <Text style={[styles.kpiLabel, { color: tokens.colors.muted }]}>Liquidity</Text>
+                <Text style={[styles.kpiValue, { color: tokens.colors.text }]}>{formatAmount(totals.liquidity)}{totalsCurrencySymbol ? ` ${totalsCurrencySymbol}` : ""}</Text>
+              </View>
+              {showInvestments && (
+                <View style={[styles.kpiChip, { borderColor: `${tokens.colors.accent}66`, backgroundColor: `${tokens.colors.accent}22` }]}>
+                  <Text style={[styles.kpiLabel, { color: tokens.colors.muted }]}>Investments</Text>
+                  <Text style={[styles.kpiValue, { color: tokens.colors.text }]}>{formatAmount(totals.investments)}{totalsCurrencySymbol ? ` ${totalsCurrencySymbol}` : ""}</Text>
+                </View>
+              )}
+              <View style={[styles.kpiChip, { borderColor: `${tokens.colors.green}66`, backgroundColor: `${tokens.colors.green}22` }]}>
+                <Text style={[styles.kpiLabel, { color: tokens.colors.muted }]}>Net worth</Text>
+                <Text style={[styles.kpiValue, { color: tokens.colors.green }]}>{formatAmount(totals.netWorth)}{totalsCurrencySymbol ? ` ${totalsCurrencySymbol}` : ""}</Text>
+              </View>
+            </View>
+          </GlassCardContainer>
+        )}
       </ScrollView>
-    </View>
+    </AppBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
   container: {
     padding: 16,
   },
   form: {
     gap: 12,
+  },
+  headerRow: {
+    // unused after header simplification
   },
   actionsRow: {
     flexDirection: "row",
@@ -578,6 +651,9 @@ const styles = StyleSheet.create({
     marginTop: 12,
     width: "100%",
     alignItems: "stretch",
+  },
+  actionSlot: {
+    flex: 1,
   },
   fullWidthButton: {
     alignSelf: "stretch",
@@ -597,17 +673,51 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
-    marginTop: 6,
-    marginBottom: 4,
+    marginTop: 8,
+    marginBottom: 2,
   },
-  monthButton: {
+  heroHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 999,
-    minHeight: 44,
+    borderWidth: 1,
   },
-  monthButtonContent: {
-    paddingHorizontal: 16,
-    height: 44,
+  monthSwitcher: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  switchBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  monthLabel: {
+    fontSize: 28,
+    fontWeight: "700",
+    letterSpacing: 0.3,
+  },
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    letterSpacing: 0.2,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  sectionSub: {
+    fontSize: 12,
   },
   lineInputRow: {
     flexDirection: "row",
@@ -617,5 +727,35 @@ const styles = StyleSheet.create({
   editButtonRow: {
     marginTop: 12,
     alignItems: "flex-start",
+  },
+  accountRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 10,
+  },
+  kpiRow: {
+    flexDirection: "row",
+    gap: 10,
+    flexWrap: "wrap",
+  },
+  kpiChip: {
+    flex: 1,
+    minWidth: 140,
+    padding: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    gap: 4,
+  },
+  kpiLabel: {
+    fontSize: 12,
+  },
+  kpiValue: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  recentRow: {
+    gap: 10,
+    paddingHorizontal: 4,
   },
 });
