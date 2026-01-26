@@ -13,9 +13,7 @@ import type { ExportPayload } from "@/importExport/types";
 import { runMigrations, withTransaction } from "@/db/db";
 import { emitDataReset } from "@/app/dataEvents";
 import { loadSampleData as seedSampleData } from "@/seed/sampleData";
-import { ensureDefaultWallets } from "@/repositories/walletsRepo";
 import { getPreference, setPreference } from "@/repositories/preferencesRepo";
-import PremiumCard from "@/ui/dashboard/components/PremiumCard";
 import SectionHeader from "@/ui/dashboard/components/SectionHeader";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -40,8 +38,14 @@ import type { SecurityModalStackParamList } from "@/security/securityFlowsTypes"
 import { useTranslation } from "react-i18next";
 import { STORAGE_KEY, SupportedLanguage } from "@/i18n";
 import { useSettings } from "@/settings/useSettings";
+import {
+  setDisplayName,
+  setHasInvestments,
+  setInitialSeedDone,
+  setOnboardingCompleted,
+} from "@/onboarding/onboardingStorage";
 import AppBackground from "@/ui/components/AppBackground";
-import { PrimaryPillButton, SegmentedControlPill, SmallOutlinePillButton } from "@/ui/components/EntriesUI";
+import { GlassCardContainer, PrimaryPillButton, SegmentedControlPill, SmallOutlinePillButton } from "@/ui/components/EntriesUI";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 function findSecurityModalNavigation(
@@ -247,12 +251,18 @@ export default function SettingsScreen(): JSX.Element {
         "expense_entries",
         "wallets",
         "expense_categories",
+        "preferences",
       ];
       for (const table of tables) {
         await db.runAsync(`DELETE FROM ${table}`);
       }
     });
-    await ensureDefaultWallets();
+    await setDisplayName("");
+    await setHasInvestments(false);
+    await setInitialSeedDone(false);
+    await setOnboardingCompleted(false);
+    await setShowInvestments(false);
+    requestReplay();
     emitDataReset();
   };
 
@@ -343,7 +353,6 @@ export default function SettingsScreen(): JSX.Element {
     textColor: tokens.colors.text,
     style: { backgroundColor: tokens.colors.glassBg },
   };
-
   return (
     <AppBackground>
       <ScrollView
@@ -352,8 +361,7 @@ export default function SettingsScreen(): JSX.Element {
           { gap: tokens.spacing.md, paddingBottom: 160 + insets.bottom, paddingTop: headerHeight + 12 },
         ]}
       >
-        <PremiumCard>
-          <View style={styles.cardContent}>
+        <GlassCardContainer contentStyle={styles.cardContent}>
             <SectionHeader title={t("settings.profile.title")} />
             <TextInput
               label={t("settings.profile.nameLabel")}
@@ -364,11 +372,9 @@ export default function SettingsScreen(): JSX.Element {
                 void updatePreference("profile_name", value.trim());
               }}
             />
-          </View>
-        </PremiumCard>
+        </GlassCardContainer>
 
-        <PremiumCard>
-          <View style={styles.cardContent}>
+        <GlassCardContainer contentStyle={styles.cardContent}>
             <SectionHeader title={t("settings.preferences.title")} />
             <View style={styles.row}>
               <Text style={[styles.label, { color: tokens.colors.text }]}>{t("settings.preferences.darkTheme")}</Text>
@@ -444,8 +450,7 @@ export default function SettingsScreen(): JSX.Element {
                 />
               </View>
             </View>
-          </View>
-        </PremiumCard>
+        </GlassCardContainer>
 
         <SecuritySettingsSection
           securityEnabled={securityEnabled}
@@ -460,8 +465,7 @@ export default function SettingsScreen(): JSX.Element {
           onToggleAutoLock={handleAutoLockToggle}
         />
 
-        <PremiumCard>
-          <View style={styles.cardContent}>
+        <GlassCardContainer contentStyle={styles.cardContent}>
             <SectionHeader title={t("settings.data.title")} />
             <PrimaryPillButton label={t("settings.data.export")} onPress={exportData} color={tokens.colors.accent} />
             <SmallOutlinePillButton label={t("settings.data.import")} onPress={importData} color={tokens.colors.text} fullWidth />
@@ -477,11 +481,9 @@ export default function SettingsScreen(): JSX.Element {
               color={tokens.colors.text}
               fullWidth
             />
-          </View>
-        </PremiumCard>
+        </GlassCardContainer>
 
-        <PremiumCard>
-          <View style={styles.cardContent}>
+        <GlassCardContainer contentStyle={styles.cardContent}>
             <SectionHeader title={t("settings.onboarding.title")} />
             <View
               style={[
@@ -501,8 +503,7 @@ export default function SettingsScreen(): JSX.Element {
               />
             </View>
             <SmallOutlinePillButton label={t("settings.reset")} onPress={resetData} color={tokens.colors.red} fullWidth />
-          </View>
-        </PremiumCard>
+        </GlassCardContainer>
       </ScrollView>
     </AppBackground>
   );

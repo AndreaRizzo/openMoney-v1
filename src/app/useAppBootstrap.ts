@@ -21,7 +21,7 @@ function toErrorMessage(error: unknown): string {
 export function useAppBootstrap(): AppBootstrap {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [themeMode, setThemeMode] = useState<ThemeMode>("light");
+  const [themeMode, setThemeMode] = useState<ThemeMode>("dark");
   const mountedRef = useRef(true);
 
   const bootstrap = useCallback(async () => {
@@ -33,7 +33,7 @@ export function useAppBootstrap(): AppBootstrap {
       await ensureDefaultWallets();
       const pref = await getPreference("theme");
       if (mountedRef.current) {
-        setThemeMode(pref?.value === "dark" ? "dark" : "light");
+        setThemeMode(pref?.value === "light" ? "light" : "dark");
       }
     } catch (err) {
       if (mountedRef.current) {

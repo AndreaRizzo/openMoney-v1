@@ -215,7 +215,10 @@
       "newCategoryLabel": "Nuova categoria",
       "addCategory": "Aggiungi",
       "noCategories": "Nessuna categoria configurata.",
-      "categoryActive": "Attiva"
+      "categoryActive": "Attiva",
+      "categoryInactive": "Disattivata",
+      "categoryActivate": "Attiva",
+      "categoryDeactivate": "Disattiva"
     },
     "form": {
       "name": "Nome",

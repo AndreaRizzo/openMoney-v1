@@ -1,15 +1,20 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
+import { BlurView } from "expo-blur";
 import type { ViewStyle, StyleProp } from "react-native";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
+import { useTheme } from "react-native-paper";
 
 type Props = {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
+  hideDecorations?: boolean;
 };
 
-export default function PremiumCard({ children, style }: Props): JSX.Element {
+export default function PremiumCard({ children, style, hideDecorations = false }: Props): JSX.Element {
   const { tokens, shadows } = useDashboardTheme();
+  const paperTheme = useTheme();
+  const tint = paperTheme.dark ? "dark" : "light";
   return (
     <View
       style={[
@@ -19,8 +24,13 @@ export default function PremiumCard({ children, style }: Props): JSX.Element {
         style,
       ]}
     >
-      <View pointerEvents="none" style={[styles.highlight, { backgroundColor: "rgba(255,255,255,0.05)" }]} />
-      <View pointerEvents="none" style={[styles.accentGlow, { backgroundColor: `${tokens.colors.accent}18` }]} />
+      <BlurView intensity={32} tint={tint} style={StyleSheet.absoluteFill} />
+      {!hideDecorations ? (
+        <>
+          <View pointerEvents="none" style={[styles.highlight, { backgroundColor: "rgba(255,255,255,0.05)" }]} />
+          <View pointerEvents="none" style={[styles.accentGlow, { backgroundColor: `${tokens.colors.accent}18` }]} />
+        </>
+      ) : null}
       {children}
     </View>
   );

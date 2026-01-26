@@ -11,6 +11,7 @@ import {
   listExpenseCategories,
   createExpenseCategory,
   updateExpenseCategory,
+  setExpenseCategoryActive,
   deleteExpenseCategory,
 } from "@/repositories/expenseCategoriesRepo";
 import { getPreference } from "@/repositories/preferencesRepo";
@@ -609,7 +610,10 @@ export default function WalletScreen(): JSX.Element {
           ) : null}
           <View style={{ gap: 10 }}>
             {categories.map((cat) => {
-              const subtitle = t("wallets.list.categoryActive");
+              const isActive = cat.active === 1;
+              const subtitle = isActive
+                ? t("wallets.list.categoryActive")
+                : t("wallets.list.categoryInactive");
               return (
                 <AccordionItem
                   key={cat.id}
@@ -660,6 +664,18 @@ export default function WalletScreen(): JSX.Element {
                     </View>
                     <View style={styles.actionsRow}>
                       <PrimaryPillButton label={t("common.save")} onPress={async () => { await saveCategory(cat.id); }} color={tokens.colors.accent} />
+                      <SmallOutlinePillButton
+                        label={
+                          isActive
+                            ? t("wallets.list.categoryDeactivate")
+                            : t("wallets.list.categoryActivate")
+                        }
+                        onPress={async () => {
+                          await setExpenseCategoryActive(cat.id, isActive ? 0 : 1);
+                          await load();
+                        }}
+                        color={isActive ? tokens.colors.red : tokens.colors.accent}
+                      />
                       <SmallOutlinePillButton
                         label={t("common.delete")}
                         onPress={async () => {

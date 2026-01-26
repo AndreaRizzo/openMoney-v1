@@ -114,32 +114,13 @@ const sampleExpenseEntries: SampleExpenseEntry[] = [
   },
 ];
 
-const sampleSnapshots: SampleSnapshot[] = [
-  {
-    date: "2024-12-01",
-    lines: [
-      { walletName: "Conto corrente", amount: 2500 },
-      { walletName: "Broker ETF", amount: 1200 },
-      { walletName: "Pocket cash", amount: 300 },
-    ],
-  },
-  {
-    date: "2025-01-01",
-    lines: [
-      { walletName: "Conto corrente", amount: 2700 },
-      { walletName: "Broker ETF", amount: 1400 },
-      { walletName: "Pocket cash", amount: 220 },
-    ],
-  },
-  {
-    date: "2025-02-01",
-    lines: [
-      { walletName: "Conto corrente", amount: 2600 },
-      { walletName: "Broker ETF", amount: 1600 },
-      { walletName: "Pocket cash", amount: 400 },
-    ],
-  },
-];
+const lastDayIso = (year: number, monthIndexZeroBased: number): string => {
+  const date = new Date(year, monthIndexZeroBased + 1, 0);
+  const yyyy = String(date.getFullYear());
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
 
 export async function loadSampleData(): Promise<void> {
   await withTransaction(async (db) => {
@@ -210,7 +191,87 @@ export async function loadSampleData(): Promise<void> {
       );
     }
 
-    for (const snapshot of sampleSnapshots) {
+    const now = new Date();
+    const historicalIncomeEntries: SampleIncomeEntry[] = [];
+    const historicalExpenseEntries: SampleExpenseEntry[] = [];
+    for (let offset = 1; offset <= 3; offset += 1) {
+      const target = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+      const dateIso = lastDayIso(target.getFullYear(), target.getMonth());
+      historicalIncomeEntries.push({
+        name: "Stipendio",
+        amount: 2300 + offset * 100,
+        start_date: dateIso,
+        recurrence_frequency: null,
+        recurrence_interval: null,
+        one_shot: 1,
+        note: "Storico",
+        walletName: "Conto corrente",
+      });
+      historicalExpenseEntries.push({
+        name: "Spese mensili",
+        amount: 900 + offset * 80,
+        start_date: dateIso,
+        recurrence_frequency: null,
+        recurrence_interval: null,
+        one_shot: 1,
+        note: "Storico",
+        walletName: "Conto corrente",
+        expenseCategory: "Casa",
+      });
+    }
+
+    for (const entry of historicalIncomeEntries) {
+      await db.runAsync(
+        `INSERT INTO income_entries
+         (name, amount, start_date, recurrence_frequency, recurrence_interval, one_shot, note, active, wallet_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)`,
+        [
+          entry.name,
+          entry.amount,
+          entry.start_date,
+          entry.recurrence_frequency,
+          entry.recurrence_interval,
+          entry.one_shot,
+          entry.note,
+          walletIds[entry.walletName] ?? null,
+        ]
+      );
+    }
+
+    for (const entry of historicalExpenseEntries) {
+      await db.runAsync(
+        `INSERT INTO expense_entries
+         (name, amount, start_date, recurrence_frequency, recurrence_interval, one_shot, note, active, wallet_id, expense_category_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`,
+        [
+          entry.name,
+          entry.amount,
+          entry.start_date,
+          entry.recurrence_frequency,
+          entry.recurrence_interval,
+          entry.one_shot,
+          entry.note,
+          walletIds[entry.walletName] ?? null,
+          categoryIds[entry.expenseCategory] ?? null,
+        ]
+      );
+    }
+
+    const recentSnapshots: SampleSnapshot[] = Array.from({ length: 3 }, (_, index) => {
+      const date = new Date(now.getFullYear(), now.getMonth() - index, 1);
+      const iso = lastDayIso(date.getFullYear(), date.getMonth());
+      const base = 2500 - index * 120;
+      return {
+        date: iso,
+        lines: [
+          { walletName: "Conto corrente", amount: base + 200 },
+          { walletName: "Broker ETF", amount: 1400 - index * 80 },
+          { walletName: "Pocket cash", amount: 300 + index * 30 },
+        ],
+      };
+    });
+
+    for (const snapshot of recentSnapshots) {
       const snapshotResult = await db.runAsync("INSERT INTO snapshots (date) VALUES (?)", [snapshot.date]);
       const snapshotId = snapshotResult.lastInsertRowId ?? 0;
       for (const line of snapshot.lines) {

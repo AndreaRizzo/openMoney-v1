@@ -23,6 +23,7 @@ import CategoriesBreakdownCard from "@/ui/dashboard/components/CategoriesBreakdo
 import RecurrencesTableCard from "@/ui/dashboard/components/RecurrencesTableCard";
 import PressScale from "@/ui/dashboard/components/PressScale";
 import Skeleton from "@/ui/dashboard/components/Skeleton";
+import PremiumCard from "@/ui/dashboard/components/PremiumCard";
 import AppBackground from "@/ui/components/AppBackground";
 import { GlassCardContainer, PillChip, SegmentedControlPill } from "@/ui/components/EntriesUI";
 import { MaterialCommunityIcons } from "@expo/vector-icons";

@@ -1,7 +1,7 @@
 import React from "react";
 import { View, StyleSheet, Text, Pressable } from "react-native";
 import { Switch } from "react-native-paper";
-import PremiumCard from "@/ui/dashboard/components/PremiumCard";
+import { GlassCardContainer } from "@/ui/components/EntriesUI";
 import SectionHeader from "@/ui/dashboard/components/SectionHeader";
 import { useDashboardTheme } from "@/ui/dashboard/theme";
 import { useTranslation } from "react-i18next";
@@ -36,7 +36,7 @@ export default function SecuritySettingsSection({
   const actionLabel = pinHashExists ? t("security.pin.changeTitle") : t("security.pin.setTitle");
 
   return (
-    <PremiumCard>
+    <GlassCardContainer contentStyle={styles.container}>
       <SectionHeader title={t("security.settings.title")} />
       <View style={styles.content}>
         <View style={styles.row}>
@@ -113,11 +113,14 @@ export default function SecuritySettingsSection({
           </Pressable>
         ) : null}
       </View>
-    </PremiumCard>
+    </GlassCardContainer>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    gap: 12,
+  },
   content: {
     gap: 12,
     marginTop: 8,
