@@ -1,4 +1,4 @@
-# Balance
+# Balance App / iOS Android
 
 Balance is an open-source, offline-first personal finance app built with React Native and Expo. It keeps every wallet, transaction, and insight on your device while still offering a polished native experience.
 
