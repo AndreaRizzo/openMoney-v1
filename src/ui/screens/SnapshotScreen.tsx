@@ -567,7 +567,7 @@ export default function SnapshotScreen(): JSX.Element {
                 value={snapshotDate}
                 editable={false}
                 {...baseInputProps}
-                style={[baseInputProps.style, { backgroundColor: tokens.colors.surface2 }]}
+                style={[baseInputProps.style, { backgroundColor: tokens.colors.glassBg }]}
               />
               {draftLines.map((line, index) => {
                 const wallet = orderedWallets.find((item) => item.id === line.walletId);
@@ -599,7 +599,7 @@ export default function SnapshotScreen(): JSX.Element {
                         keyboardType="decimal-pad"
                         value={line.amount}
                         {...baseInputProps}
-                        style={[baseInputProps.style, { backgroundColor: tokens.colors.surface, flex: 1 }]}
+                        style={[baseInputProps.style, { backgroundColor: tokens.colors.glassBg, flex: 1 }]}
                         onChangeText={onAmountChange}
                         onFocus={() => setFocusedLineId(line.walletId)}
                         onBlur={() => setFocusedLineId((prev) => (prev === line.walletId ? null : prev))}
