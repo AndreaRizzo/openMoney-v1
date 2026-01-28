@@ -7,12 +7,20 @@
       "distribution": "internal",
       "env": {
         "APP_VARIANT": "free"
+      },
+      "android": {
+        "buildType": "apk",
+        "credentialsSource": "remote"
       }
     },
     "pro": {
       "distribution": "internal",
       "env": {
         "APP_VARIANT": "pro"
+      },
+      "android": {
+        "buildType": "apk",
+        "credentialsSource": "remote"
       }
     },
     "freeStore": {
@@ -20,6 +28,10 @@
       "autoIncrement": true,
       "env": {
         "APP_VARIANT": "free"
+      },
+      "android": {
+        "buildType": "app-bundle",
+        "credentialsSource": "remote"
       }
     },
     "proStore": {
@@ -27,6 +39,10 @@
       "autoIncrement": true,
       "env": {
         "APP_VARIANT": "pro"
+      },
+      "android": {
+        "buildType": "app-bundle",
+        "credentialsSource": "remote"
       }
     }
   },
