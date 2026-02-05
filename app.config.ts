@@ -22,12 +22,15 @@ const VARIANT_LIMITS: Record<AppVariant, VariantLimits> = {
 
 const GLOBAL_SLUG = "balance";
 
-const VARIANT_CONFIG: Record<AppVariant, {
-  name: string;
-  scheme: string;
-  iosBundleIdentifier: string;
-  androidPackage: string;
-}> = {
+const VARIANT_CONFIG: Record<
+  AppVariant,
+  {
+    name: string;
+    scheme: string;
+    iosBundleIdentifier: string;
+    androidPackage: string;
+  }
+> = {
   free: {
     name: "Balance",
     scheme: "balance",
@@ -42,18 +45,28 @@ const VARIANT_CONFIG: Record<AppVariant, {
   },
 };
 
-const BASE_PLUGINS = ["expo-sqlite", "@react-native-community/datetimepicker"];
+// Added "expo-font" to satisfy @expo/vector-icons peer dependency for standalone builds
+const BASE_PLUGINS = ["expo-sqlite", "@react-native-community/datetimepicker", "expo-font"];
 
 const FACE_ID_USAGE_DESCRIPTION = "Usiamo Face ID per proteggere l'accesso a Balance.";
 
 export default function ({ config }: ConfigContext): ExpoConfig {
   const variant = VARIANT_CONFIG[APP_VARIANT];
+
+  // Merge plugins from app.json/app.config defaults + our base plugins, without duplicates
   const mergedPlugins = Array.from(new Set([...(config.plugins ?? []), ...BASE_PLUGINS]));
+
   const variantLimits = VARIANT_LIMITS[APP_VARIANT];
+
   const iosConfig = config.ios ?? {};
   const { infoPlist: iosInfoPlist = {}, ...iosRest } = iosConfig;
+
+  // Ensure we control NSFaceIDUsageDescription, avoid double-definition
   const iosInfoPlistRest = { ...iosInfoPlist };
   delete iosInfoPlistRest.NSFaceIDUsageDescription;
+
+  const androidConfig = config.android ?? {};
+  const { versionCode: _ignoredVersionCode, ...androidRest } = androidConfig;
 
   return {
     ...config,
@@ -82,9 +95,9 @@ export default function ({ config }: ConfigContext): ExpoConfig {
       },
     },
     android: {
-      ...(config.android ?? {}),
+      ...androidRest,
       package: variant.androidPackage,
-      versionCode: 1,
+      // versionCode intentionally omitted because EAS version source is "remote"
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#ffffff",
